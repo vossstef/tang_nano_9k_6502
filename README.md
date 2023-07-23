@@ -11,6 +11,8 @@ Features
 * BASIC Interpreter
 * PS/2 Keyboard
 
+be aware to type all interpreter commands in CAPITAL letters ! like  LIST RUN etc.
+
 ## Tang Push Button utilization
 * S1 push button Reset
 
