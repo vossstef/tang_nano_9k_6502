@@ -84,8 +84,7 @@ module keyboard
          ps2_long_keycode <= 0;
 
          modifier_pressed = 6'h00;
-         caps_lock_active <= 0;
-
+         caps_lock_active <= 1;  // default caps lock active to get capital characters
          special_data <= 0;
       end
       else if (valid && ready) begin

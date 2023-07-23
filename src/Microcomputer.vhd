@@ -26,8 +26,8 @@ port(
     hdmi_tx_clk_p   : out std_logic;
     hdmi_tx_n       : out std_logic_vector(2 downto 0);
     hdmi_tx_p       : out std_logic_vector(2 downto 0);
-    ps2Clk          : inout std_logic;
-    ps2Data         : inout std_logic;
+    ps2Clk          : in std_logic;
+    ps2Data         : in std_logic;
     LED             : out std_logic_vector(5 downto 0);
     user_button_n   : in std_logic
   );
