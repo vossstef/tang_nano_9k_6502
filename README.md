@@ -1,7 +1,8 @@
 # tang_nano_9k_6502
 [6502](https://en.wikipedia.org/wiki/MOS_Technology_6502) CPU living in a [Gowin GW1NR-9](https://www.gowinsemi.com/en/product/detail/49/) FPGA on a [Sipeed Tang Nano 9k](https://api.dl.sipeed.com/shareURL/TANG/Nano%209K/1_Specification).<br>
 <br>
-Port of [ricktw](https://github.com/riktw) project [6502_HDMI](https://github.com/riktw/tang4Kramblings) to Tang Nano 9k
+Port of [ricktw](https://github.com/riktw) project [6502_HDMI](https://github.com/riktw/tang4Kramblings) to Tang Nano 9k<br>
+Further description of the original project over here [here](https://justanotherelectronicsblog.com/?p=986)<br>
 
 
 Features
