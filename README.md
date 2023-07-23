@@ -2,7 +2,7 @@
 A [6502](https://en.wikipedia.org/wiki/MOS_Technology_6502) SBC in a [Gowin GW1NR-9](https://www.gowinsemi.com/en/product/detail/49/) FPGA on a [Sipeed Tang Nano 9k](https://api.dl.sipeed.com/shareURL/TANG/Nano%209K/1_Specification).<br>
 <br>
 Ported [ricktw](https://github.com/riktw) project [6502_HDMI](https://github.com/riktw/tang4Kramblings) to a Tang Nano 9k<br>
-Further description of the original project over here [here](https://justanotherelectronicsblog.com/?p=986) using sources from [display_controller](https://github.com/projf/display_controller), [vt52](https://github.com/AndresNavarro82/vt52-fpga) and [multicomp](https://searle.x10host.com/Multicomp/index.html) <br>
+Further description of the original project over [here](https://justanotherelectronicsblog.com/?p=986) using sources from [display_controller](https://github.com/projf/display_controller) and [vt52](https://github.com/AndresNavarro82/vt52-fpga) <br>
 
 Features
 * HDMI Video Output 640x480
