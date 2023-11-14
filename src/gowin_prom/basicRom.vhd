@@ -1,10 +1,11 @@
---Copyright (C)2014-2021 Gowin Semiconductor Corporation.
+--Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---GOWIN Version: V1.9.8
---Part Number: GW1NSR-LV4CQN48PC7/I6
---Device: GW1NSR-4C
---Created Time: Sun Sep 12 19:16:34 2021
+--GOWIN Version: V1.9.8.11 Education
+--Part Number: GW1NR-LV9QN88PC6/I5
+--Device: GW1NR-9
+--Device Version: C
+--Created Time: Sun Nov 12 22:27:47 2023
 
 library IEEE;
 use IEEE.std_logic_1164.all;

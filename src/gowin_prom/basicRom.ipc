@@ -2,14 +2,14 @@
 ipc_version=4
 file=basicRom
 module=basicRom
-target_device=gw1nsr4c-009
+target_device=gw1nr9c-004
 type=ram_prom
 version=1.0
 
 [Config]
 DEPTH=8192
 LANG=1
-MEM_FILE=../basic.mi
+MEM_FILE=../../rom/basic.mi
 READ=0
 RESET_MODE=true
 WIDTH=8

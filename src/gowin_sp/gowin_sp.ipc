@@ -2,7 +2,7 @@
 ipc_version=4
 file=gowin_sp
 module=Gowin_SP
-target_device=gw1nsr4c-009
+target_device=gw1nr9c-004
 type=ram_sp
 version=3.0
 

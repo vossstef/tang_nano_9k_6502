@@ -11,6 +11,16 @@ Features
 * PS/2 Keyboard
 * RAM 4K
 
+## ToDo at Startup
+A green blinking cursor will apear.<br>
+Cold[C] or warm [W] start ?<br>
+Answer by a 'c' keypress<br>
+MEMORY SIZE?<br>
+Answer by typing 4095<br>
+TERMINAL WIDTH?<br>
+Answer by typing 80<br>
+System shall response with BASIC xy and OK promt<br>
+
 ## Tang Push Button utilization
 * S1 push button Reset
 
