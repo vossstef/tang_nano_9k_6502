@@ -16,7 +16,6 @@
         <File path="src/dvi.v" type="file.verilog" enable="1"/>
         <File path="src/dvi_clkdiv.v" type="file.verilog" enable="1"/>
         <File path="src/dvi_generator.v" type="file.verilog" enable="1"/>
-        <File path="src/gowin_rpll/gowin_rpll_dvi.v" type="file.verilog" enable="1"/>
         <File path="src/keyboard.v" type="file.verilog" enable="1"/>
         <File path="src/keymap_rom.v" type="file.verilog" enable="1"/>
         <File path="src/serializer_10to1.v" type="file.verilog" enable="1"/>

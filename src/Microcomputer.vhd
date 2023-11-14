@@ -94,8 +94,21 @@ signal rts1         : std_logic;
 signal dviclk       : std_logic;
 signal vgaclk       : std_logic;
 signal framestart   : std_logic;
+signal clk_lock     : std_logic;
+
+COMPONENT GSR
+ PORT (
+ GSRI:IN std_logic
+ );
+end component;
 
 begin
+
+    gsr_inst: GSR
+    PORT MAP(
+    GSRI => n_reset
+  );
+
 -- ____________________________________________________________________________________
 -- CPU CHOICE GOES HERE
 cpu1 : entity work.T65
