@@ -1,11 +1,12 @@
---Copyright (C)2014-2023 Gowin Semiconductor Corporation.
+--Copyright (C)2014-2025 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---GOWIN Version: V1.9.8.11 Education
+--Tool Version: V1.9.12.01
+--IP Version: 1.0
 --Part Number: GW1NR-LV9QN88PC6/I5
 --Device: GW1NR-9
 --Device Version: C
---Created Time: Sat Jul 22 23:22:18 2023
+--Created Time: Fri Mar 27 20:59:15 2026
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -13,13 +14,14 @@ use IEEE.std_logic_1164.all;
 entity Gowin_rPLL_pll50 is
     port (
         clkout: out std_logic;
+        lock: out std_logic;
+        reset: in std_logic;
         clkin: in std_logic
     );
 end Gowin_rPLL_pll50;
 
 architecture Behavioral of Gowin_rPLL_pll50 is
 
-    signal lock_o: std_logic;
     signal clkoutp_o: std_logic;
     signal clkoutd_o: std_logic;
     signal clkoutd3_o: std_logic;
@@ -113,11 +115,11 @@ begin
         )
         port map (
             CLKOUT => clkout,
-            LOCK => lock_o,
+            LOCK => lock,
             CLKOUTP => clkoutp_o,
             CLKOUTD => clkoutd_o,
             CLKOUTD3 => clkoutd3_o,
-            RESET => gw_gnd,
+            RESET => reset,
             RESET_P => gw_gnd,
             CLKIN => clkin,
             CLKFB => gw_gnd,

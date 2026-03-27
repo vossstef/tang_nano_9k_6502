@@ -1,6 +1,6 @@
 [General]
-ipc_version=4
 file=gowin_rpll_pll50
+ipc_version=4
 module=Gowin_rPLL_pll50
 target_device=gw1nr9c-004
 type=clock_rpll
@@ -18,7 +18,7 @@ CLKOUT_FREQ=50
 CLKOUT_TOLERANCE=3
 DYNAMIC=true
 LANG=1
-LOCK_EN=false
+LOCK_EN=true
 MODE_GENERAL=true
 PLL_PWD=false
-RESET_PLL=false
+RESET_PLL=true

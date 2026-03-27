@@ -8,13 +8,11 @@
         <File path="src/async_reset.v" type="file.verilog" enable="1"/>
         <File path="src/char_buffer.v" type="file.verilog" enable="1"/>
         <File path="src/char_rom.v" type="file.verilog" enable="1"/>
-        <File path="src/clock_generator.v" type="file.verilog" enable="1"/>
         <File path="src/command_handler.v" type="file.verilog" enable="1"/>
         <File path="src/cursor.v" type="file.verilog" enable="1"/>
         <File path="src/cursor_blinker.v" type="file.verilog" enable="1"/>
         <File path="src/display_timings.v" type="file.verilog" enable="1"/>
         <File path="src/dvi.v" type="file.verilog" enable="1"/>
-        <File path="src/dvi_clkdiv.v" type="file.verilog" enable="1"/>
         <File path="src/dvi_generator.v" type="file.verilog" enable="1"/>
         <File path="src/keyboard.v" type="file.verilog" enable="1"/>
         <File path="src/keymap_rom.v" type="file.verilog" enable="1"/>

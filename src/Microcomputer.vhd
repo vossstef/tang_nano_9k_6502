@@ -95,6 +95,7 @@ signal dviclk       : std_logic;
 signal vgaclk       : std_logic;
 signal framestart   : std_logic;
 signal clk_lock     : std_logic;
+signal vga_lock     : std_logic;
 
 COMPONENT GSR
  PORT (
@@ -104,18 +105,12 @@ end component;
 
 begin
 
-    gsr_inst: GSR
-    PORT MAP(
-    GSRI => n_reset
-  );
-
--- ____________________________________________________________________________________
 -- CPU CHOICE GOES HERE
 cpu1 : entity work.T65
 port map(
     Enable => '1',
     Mode => "00",
-    Res_n => n_reset,
+    Res_n => clk_lock,
     Clk => cpuClock,
     Rdy => '1',
     Abort_n => '1',
@@ -175,13 +170,16 @@ port map(
 
 pll50: entity work.Gowin_rPLL_pll50
     port map (
+    reset => not clk_lock,
     clkout => vgaclk,
-    clkin => dviclk
+    clkin => dviclk,
+    lock => vga_lock
     );
 
 vt521 : entity work.vt52
 port map (
     clk => vgaclk,
+    pll_lock => vga_lock,
     start => framestart,
     hsync => hSync,
     vsync => vSync,
@@ -202,7 +200,7 @@ dvi1 : entity work.display_dvi
 port map
 (
     CLK => clk,
-    RST_BTN => n_reset,
+    RST_BTN => not n_reset,
     hdmi_tx_clk_n => hdmi_tx_clk_n,
     hdmi_tx_clk_p => hdmi_tx_clk_p,
     hdmi_tx_n => hdmi_tx_n,
@@ -212,7 +210,8 @@ port map
     green => videoG,
     blue => "00100000",
     dviclk => dviclk,
-    framestart => framestart
+    framestart => framestart,
+    clk_lock => clk_lock
 );
 -- ____________________________________________________________________________________
 -- MEMORY READ/WRITE LOGIC GOES HERE

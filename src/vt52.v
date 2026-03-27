@@ -1,13 +1,14 @@
 module vt52 (input  wire     clk,
             input wire start,
+            input wire pll_lock,
             output wire hsync,
             output wire vsync,
             output wire video,
             output wire led,
-            input  wire     ps2_data,
-            input  wire     ps2_clk,
-            input  wire     rxd,
-            output wire     txd
+            input  wire ps2_data,
+            input  wire ps2_clk,
+            input  wire rxd,
+            output wire txd
             );
    localparam ROWS = 25;
    localparam COLS = 80;
@@ -16,9 +17,7 @@ module vt52 (input  wire     clk,
    localparam ADDR_BITS = 11;
 
    // clock generator outputs
-   wire clk_usb, reset_usb;
-   wire clk_vga, reset_vga;
-   wire hs_clk;
+   wire clk_vga;
 
    // scroll
    wire [ADDR_BITS-1:0] new_first_char;
@@ -59,15 +58,17 @@ module vt52 (input  wire     clk,
    //
    // Instantiate all modules
    //
-   clock_generator clock_generator(.clk(clk),
-                                   .clk_usb(clk_usb),
-                                   .reset_usb(reset_usb),
-                                   .clk_vga(clk_vga),
-                                   .reset_vga(reset_vga)
-                                   );
+    CLKDIV clkdiv2_inst (
+        .CLKOUT(clk_vga),
+        .HCLKIN(clk),
+        .RESETN(pll_lock),
+        .CALIB(1'b0)
+    );
+    defparam clkdiv2_inst.DIV_MODE = "2";
+    defparam clkdiv2_inst.GSREN = "false";
 
    keyboard keyboard(.clk(clk),
-                     .reset(reset_usb),
+                     .reset(~pll_lock),
                      .ps2_data(ps2_data),
                      .ps2_clk(ps2_clk),
                      .data(uart_in_data),
@@ -77,7 +78,7 @@ module vt52 (input  wire     clk,
 
    cursor #(.ROW_BITS(ROW_BITS), .COL_BITS(COL_BITS))
       cursor(.clk(clk),
-             .reset(reset_usb),
+             .reset(~pll_lock),
              .tick(vblank),
              .x(cursor_x),
              .y(cursor_y),
@@ -89,7 +90,7 @@ module vt52 (input  wire     clk,
 
    simple_register #(.SIZE(ADDR_BITS))
       scroll_register(.clk(clk),
-                      .reset(reset_usb),
+                      .reset(~pll_lock),
                       .idata(new_first_char),
                       .wen(new_first_char_wen),
                       .odata(first_char)
@@ -109,7 +110,7 @@ module vt52 (input  wire     clk,
                      );
 
    video_generator video_generator(.clk(clk_vga),
-                      .reset(reset_vga),
+                      .reset(~pll_lock),
                       .start(start),
                       .hsync(hsync),
                       .vsync(vsync),
@@ -127,7 +128,7 @@ module vt52 (input  wire     clk,
                       );
 
    uart uart(.clk(clk),
-                 .rst(reset_usb),
+                 .rst(~pll_lock),
                  // usb pins
                  .rxd(rxd),
                  .txd(txd),
@@ -154,7 +155,7 @@ module vt52 (input  wire     clk,
                      .COL_BITS(COL_BITS),
                      .ADDR_BITS(ADDR_BITS))
       command_handler(.clk(clk),
-                      .reset(reset_usb),
+                      .reset(~pll_lock),
                       .data(uart_out_data),
                       .valid(uart_out_valid),
                       .ready(uart_out_ready),

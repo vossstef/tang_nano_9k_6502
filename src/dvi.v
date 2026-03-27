@@ -11,14 +11,14 @@ module display_dvi(
     input wire [7:0] blue,
 
     output wire dviclk,
-    output wire framestart
+    output wire framestart,
+    output wire clk_lock
     );
 
 
     // Display Clocks
     wire pix_clk;                   // pixel clock
     wire pix_clk_5x;                // 5x clock for 10:1 DDR SerDes
-    wire clk_lock;                  // clock locked?
 
     wire clkoutp_o;
     wire clkoutd_o;
@@ -33,7 +33,7 @@ module display_dvi(
         .CLKOUTP(clkoutp_o),
         .CLKOUTD(clkoutd_o),
         .CLKOUTD3(clkoutd3_o),
-        .RESET(gw_gnd),
+        .RESET(RST_BTN),
         .RESET_P(gw_gnd),
         .CLKIN(CLK),
         .CLKFB(gw_gnd),
@@ -68,12 +68,14 @@ module display_dvi(
     defparam rpll_inst.CLKOUTD3_SRC = "CLKOUT";
     defparam rpll_inst.DEVICE = "GW1NR-9C";
 
-    DVI_CLKDIV clockdiv(
-        .clkout(pix_clk), //output clkout
-        .hclkin(pix_clk_5x), //input hclkin
-        .resetn(clk_lock), //input resetn
-        .calib(1'b1) //input calib
+    CLKDIV clockdiv(
+        .CLKOUT(pix_clk),
+        .HCLKIN(pix_clk_5x),
+        .RESETN(clk_lock),
+        .CALIB(1'b0)
     );
+    defparam clockdiv.DIV_MODE = "5";
+    defparam clockdiv.GSREN = "false";
 
     // Display Timings
     wire signed [15:0] sx;          // horizontal screen position (signed)
