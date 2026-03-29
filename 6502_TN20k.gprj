@@ -1,0 +1,58 @@
+<?xml version="1" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project>
+<Project>
+    <Template>FPGA</Template>
+    <Version>5</Version>
+    <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
+    <FileList>
+        <File path="src/gowin_dpb/sector_dpram.v" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/audio_clock_regeneration_packet.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/audio_info_frame.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/audio_sample_packet.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/auxiliary_video_information_info_frame.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/hdmi.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/packet_assembler.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/packet_picker.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/serializer.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
+        <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
+        <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/osd_u8g2.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/sd_card.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/sd_rw.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/sdcmd_ctrl.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/sysctrl.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/video.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/ws2812.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/async_reset.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/char_buffer.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/char_rom.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/command_handler.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/cursor.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/cursor_blinker.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/fifo_async.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/keyboard.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/keymap.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/keymap_rom.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/simple_register.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/sync_signal.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/uart.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/uart_rx.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/uart_tx.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/video_generator.v" type="file.verilog" enable="1"/>
+        <File path="src/tang/vt52.v" type="file.verilog" enable="1"/>
+        <File path="src/T65.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/T65_ALU.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/T65_MCode.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/T65_Pack.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/bufferedUART.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/basicRom.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_rpll/gowin_rpll_126mhz.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_sp/gowin_sp.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/tang/Microcomputer.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/tang/6502_TN20k.cst" type="file.cst" enable="1"/>
+        <File path="src/misc/terminal_xml.hex" type="file.other" enable="1"/>
+    </FileList>
+</Project>
