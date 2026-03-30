@@ -386,7 +386,7 @@ cpu1 : entity work.T65
 port map(
     Enable => '1',
     Mode => "00",
-    Res_n => '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
+    Res_n => pll_lock, -- '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
     Clk => cpuClock,
     Rdy => '1',
     Abort_n => '1',
