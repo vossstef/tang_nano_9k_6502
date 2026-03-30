@@ -106,9 +106,10 @@ always @(posedge clk) begin
             // CMD 1: keyboard data
             if(command == 8'd1) begin
             // kbd_column and kbd_row are derived from data_in
-               if(state == 4'd0) 
+               if(state == 4'd0) begin
                 usb_kbd <= data_in;
-                kbd_strobe <= ~kbd_strobe;		
+                kbd_strobe <= ~kbd_strobe;
+               end
             end
             // CMD 2: mouse data
             if(command == 8'd2) begin

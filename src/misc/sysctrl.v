@@ -35,29 +35,10 @@ module sysctrl (
   output reg [7:0]  port_in_data,
 
   // values that can be configured by the user
-  output reg [1:0]  system_monitor,
-  output reg        system_cpu,
   output reg [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
   output reg [1:0]  system_volume,
   output reg        system_wide_screen,
-  output reg [1:0]  system_floppy_wprot,
-  output reg [2:0]  system_port_1,
-  output reg [1:0]  system_palette,
-  output reg        system_video_std,
-  output reg        system_ssc,
-  output reg        system_mb,
-  output reg        system_mouse,
-  output reg        system_hdd,
-  output reg        system_videorom,
-  output reg        system_databits,
-  output reg        system_analogxy,
-  output reg        system_hdd_prot,
-  output reg [1:0]  system_uart,
-  output reg [1:0]  system_parity,
-  output reg [3:0]  system_baudrate,
-  output reg        system_sscirq,
-  output reg        system_lfcr,
   output reg        system_lores_text
 );
 
@@ -116,28 +97,9 @@ always @(posedge clk) begin
       // OSD value defaults. These should be sane defaults, but the MCU
       // will very likely override these early
       system_reset <= 2'b00;
-      system_monitor <= 2'b00;
-      system_cpu <= 1'b1;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
-      system_floppy_wprot <= 2'b11;
-      system_port_1 <= 3'b000;
-      system_palette <= 2'b00;
-      system_video_std <= 1'b1;
-      system_ssc <= 1'b1;
-      system_mb <= 1'b1;
-      system_mouse <= 1'b1;
-      system_hdd <= 1'b1;
-      system_videorom <= 1'b0;
-      system_analogxy <= 1'b0;
-      system_uart <= 2'b00;
-      system_hdd_prot <= 1'b1;
-      system_databits <= 1'b0;
-      system_parity <= 2'b00;
-      system_baudrate <= 4'd14;
-      system_sscirq <= 1'b0;
-      system_lfcr <= 1'b0;
       system_lores_text <= 1'b0;
    end else begin // if (reset)
       //  bring button state into local clock domain
@@ -208,10 +170,6 @@ always @(posedge clk) begin
                 if(state == 4'd0) id <= data_in;
 
                 if(state == 4'd1) begin
-                    // Value "C":
-                    if(id == "C") system_monitor <= data_in[1:0];
-                    // Value "M": 
-                    if(id == "M") system_cpu <= data_in[0];
                     // Value "R": coldboot(3), reset(1) or run(0)
                     if(id == "R") system_reset <= data_in[1:0];
                     // Value "S": scanlines none(0), 25%(1), 50%(2) or 75%(3)
@@ -220,41 +178,7 @@ always @(posedge clk) begin
                     if(id == "A") system_volume <= data_in[1:0];
                     // Value "W": normal 4:3 screen (0), wide 16:9 screen (1)
                     if(id == "W") system_wide_screen <= data_in[0];
-                    // Value "P": floppy write protecion
-                    if(id == "P") system_floppy_wprot <= data_in[1:0];
-                    // Joystick port  input device selection
-                    if(id == "Q") system_port_1 <= data_in[2:0];
-                    // 
-                    if(id == "D") system_palette <= data_in[1:0];
-                    //
-                    if(id == "E") system_video_std <= data_in[0];
-                    // 
-                    if(id == "U") system_ssc <= data_in[0];
-                    // 
-                    if(id == "X") system_mb <= data_in[0];
-                    // 
-                    if(id == "Y") system_mouse <= data_in[0];
-                    // 
-                    if(id == "N") system_hdd <= data_in[0];
-                    // 
-                    if(id == "G") system_videorom <= data_in[0];
-                    // 
-                    if(id == "V") system_databits <= data_in[0];
-                    // 
-                    if(id == "I") system_analogxy <= data_in[0];
-                    // RS232 UART port
-                    if(id == "*") system_uart <= data_in[1:0];
-                    // 
-                    if(id == "J") system_hdd_prot <= data_in[0];
-                    //
-                    if(id == "!") system_parity <= data_in[1:0];
-                    //
-                    if(id == "&") system_databits <= data_in[0];
-                    //
-                    if(id == "=") system_baudrate <= data_in[3:0];
-                    //
-                    if(id == "?") system_lfcr <= data_in[0];
-                    // 
+                    // Value "(": 
                     if(id == "(") system_lores_text <= data_in[0];
                 end
             end

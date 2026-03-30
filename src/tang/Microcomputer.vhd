@@ -48,7 +48,7 @@ architecture struct of Microcomputer is
 
 signal n_WR: std_logic;
 signal n_RD: std_logic;
-signal cpuAddress: std_logic_vector(15 downto 0);
+signal cpuAddress: std_logic_vector(23 downto 0);
 signal cpuDataOut: std_logic_vector(7 downto 0);
 signal cpuDataIn: std_logic_vector(7 downto 0);
 
@@ -84,7 +84,6 @@ signal cpuClkCount: std_logic_vector(5 downto 0);
 signal sdClkCount: std_logic_vector(5 downto 0); 
 signal cpuClock: std_logic;
 signal serialClock: std_logic;
-signal serialClock2x: std_logic;
 signal sdClock: std_logic;
 
 signal videoG0      : std_logic;
@@ -125,8 +124,6 @@ signal ws2812_color   : std_logic_vector(23 downto 0);
 signal sdc_int        : std_logic :='0';
 signal sdc_iack       : std_logic;
 signal mcu_sdc_strobe : std_logic;
-signal uart_clk       : std_logic;
-
 signal system_reset   : std_logic_vector(1 downto 0);
 
 component CLKDIV
@@ -368,7 +365,7 @@ vt52inst: entity work.vt52
 port map (
     clk         => clk_pixel_x2, -- 50.4Mhz
     clk_pixel   => clk_pixel,    -- 25.2Mhz
-    uart_clk    => clk_pixel_x2, -- serialClock2x,-- 3.6 MHz UART clock
+    uart_clk    => serialClock, -- 1.8MHz
     pll_lock    => pll_lock,
     hsync       => hSync,
     vsync       => vSync,
@@ -387,7 +384,7 @@ cpu1 : entity work.T65
 port map(
     Enable => '1',
     Mode => "00",
-    Res_n => pll_lock,
+    Res_n => '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
     Clk => cpuClock,
     Rdy => '1',
     Abort_n => '1',
@@ -395,7 +392,7 @@ port map(
     NMI_n => '1',
     SO_n => '1',
     R_W_n => n_WR,
-    A(15 downto 0) => cpuAddress,
+    A => cpuAddress,
     DI => cpuDataIn,
     DO => cpuDataOut
 );
@@ -405,7 +402,7 @@ port map(
 rom1 : entity work.basicRom
 port map(
     ad => cpuAddress(12 downto 0),
-    clk => clk,
+    clk => clk_pixel_x2,
     dout => basRomData,
     reset => '0',
     ce => '1',
@@ -417,7 +414,7 @@ ram1: entity work.Gowin_SP
 port map
 (
     ad => cpuAddress(11 downto 0),
-    clk => clk,
+    clk => clk_pixel_x2,
     din => cpuDataOut,
     wre => not(n_memWR or n_internalRam1CS),
     dout => internalRam1DataOut,
@@ -430,7 +427,7 @@ port map
 
 io1 : entity work.bufferedUART
 port map(
-    clk => clk,
+    clk => clk_pixel_x2,
     n_wr => n_interface1CS or cpuClock or n_WR,
     n_rd => n_interface1CS or cpuClock or (not n_WR),
     n_int => n_int1,
@@ -473,11 +470,10 @@ cpuDataIn <=
 
 -- SYSTEM CLOCKS GO HERE
 serialClock <= serialClkCount(15); -- 1.843 MHz
-serialClock2x <= serialClkCount(14); -- 3.686 MHz
 
-process (clk)
+process (clk_pixel_x2)
 begin
-if rising_edge(clk) then
+if rising_edge(clk_pixel_x2) then
 
     if cpuClkCount < 4 then -- 4 = 10MHz, 3 = 12.5MHz, 2=16.6MHz, 1=25MHz
         cpuClkCount <= cpuClkCount + 1;
@@ -491,7 +487,7 @@ if rising_edge(clk) then
         cpuClock <= '1';
     end if;
 
-    serialClkCount <= serialClkCount + 4474;  -- 27Mhz
+    serialClkCount <= serialClkCount + 2396;
 end if;
 end process;
 end;
