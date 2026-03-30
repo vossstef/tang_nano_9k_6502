@@ -125,6 +125,7 @@ signal sdc_int        : std_logic :='0';
 signal sdc_iack       : std_logic;
 signal mcu_sdc_strobe : std_logic;
 signal system_reset   : std_logic_vector(1 downto 0);
+signal system_scanlines : std_logic_vector(1 downto 0);
 
 component CLKDIV
     generic (
@@ -262,6 +263,7 @@ module_inst: entity work.sysctrl
   data_out            => sys_data_out,
   -- values that can be configured by the user
   system_reset        => system_reset,
+  system_scanlines    => system_scanlines,
   -- port io (used to expose rs232)
   port_status         => (others=>'0'),
   port_out_available  => (others=>'0'),
@@ -286,7 +288,7 @@ sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
 generic map (
-    CLK_DIV  => 1
+    CLK_DIV  => 0
   )
     port map (
     rstn            => pll_lock,
@@ -352,7 +354,7 @@ port map(
 
       -- values that can be configure by the user via osd
       system_wide_screen => '0',
-      system_scanlines => "00",
+      system_scanlines => system_scanlines,
       system_volume => "00",
 
       tmds_clk_n => tmds_clk_n,
