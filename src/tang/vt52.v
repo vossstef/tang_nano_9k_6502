@@ -11,6 +11,8 @@ module vt52 (
             output led,
             input [7:0] usb_kbd,
             input kbd_strobe,
+            input ps2_clk,
+            input ps2_data,
             input  rxd,
             output txd
             );
@@ -56,8 +58,10 @@ module vt52 (
 
    keyboard keyboard(.clk(clk),
                      .reset(~pll_lock),
-                     .usb_kbd(usb_kbd),
-                     .kbd_strobe(kbd_strobe),
+//                     .usb_kbd(usb_kbd),
+//                     .kbd_strobe(kbd_strobe),
+                     .ps2_data(ps2_data),
+                     .ps2_clk(ps2_clk),
                      .data(uart_in_data),
                      .valid(uart_in_valid),
                      .ready(uart_in_ready)

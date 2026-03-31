@@ -17,7 +17,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use  IEEE.STD_LOGIC_ARITH.all;
 use  IEEE.STD_LOGIC_UNSIGNED.all;
---use  IEEE.numeric_std.ALL;
 
 entity Microcomputer is
 port(
@@ -45,6 +44,11 @@ port(
 end Microcomputer;
 
 architecture struct of Microcomputer is
+
+signal	sdCS		: std_logic;
+signal	sdMOSI		:  std_logic;
+signal	sdMISO		:  std_logic;
+signal	sdSCLK		:  std_logic;
 
 signal n_WR: std_logic;
 signal n_RD: std_logic;
@@ -126,6 +130,11 @@ signal sdc_iack       : std_logic;
 signal mcu_sdc_strobe : std_logic;
 signal system_reset   : std_logic_vector(1 downto 0);
 signal system_scanlines : std_logic_vector(1 downto 0);
+signal ps2_key        : std_logic_vector(10 downto 0);
+signal ps2_kbd_clk    : std_logic;
+signal ps2_kbd_data   : std_logic;
+signal reset_counter  : unsigned(15 downto 0) := (others => '0');
+signal reset_n_internal : std_logic := '0';
 
 component CLKDIV
     generic (
@@ -236,6 +245,9 @@ hid_inst: entity work.hid
   -- output HID data received from USB
   usb_kbd         => usb_kbd,
   kbd_strobe      => kbd_strobe,
+  ps2_key         => ps2_key,
+  ps2_kbd_clk     => ps2_kbd_clk,
+  ps2_kbd_data    => ps2_kbd_data,
   joystick0       => open,
   joystick1       => open,
   mouse_btns      => open,
@@ -363,30 +375,29 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
-vt52inst: entity work.vt52
-port map (
-    clk         => clk_pixel_x2, -- 50.4Mhz
-    clk_pixel   => clk_pixel,    -- 25.2Mhz
-    uart_clk    => serialClock, -- 1.8MHz
-    pll_lock    => pll_lock,
-    hsync       => hSync,
-    vsync       => vSync,
-    vblank      => vblank,
-    hblank      => hblank,
-    video       => videoG0,
-    led         => open,
-    usb_kbd     => usb_kbd,
-    kbd_strobe  => kbd_strobe,
-    rxd         => uarttx,
-    txd         => uartrx
-);
+process(clk_pixel_x2)
+begin
+	if rising_edge(clk_pixel_x2) then
+		if pll_lock = '0' then
+			reset_counter <= (others => '0');
+			reset_n_internal <= '0';
+		else
+			if reset_counter /= unsigned'(X"FFFF") then
+				reset_counter <= reset_counter + 1;
+				reset_n_internal <= '0';
+			else
+				reset_n_internal <= '1';
+			end if;
+		end if;
+	end if;
+end process;
 
 -- CPU CHOICE GOES HERE
 cpu1 : entity work.T65
 port map(
     Enable => '1',
     Mode => "00",
-    Res_n => pll_lock, -- '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
+    Res_n => reset_n_internal, -- '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
     Clk => cpuClock,
     Rdy => '1',
     Abort_n => '1',
@@ -424,8 +435,29 @@ port map
     ce => '1',
     oce => '1'
 );
+
 -- ____________________________________________________________________________________
 -- INPUT/OUTPUT DEVICES GO HERE
+
+vt52inst: entity work.vt52
+port map (
+    clk         => clk_pixel_x2, -- 50.4Mhz
+    clk_pixel   => clk_pixel,    -- 25.2Mhz
+    uart_clk    => serialClock, -- 1.8MHz
+    pll_lock    => pll_lock,
+    hsync       => hSync,
+    vsync       => vSync,
+    vblank      => vblank,
+    hblank      => hblank,
+    video       => videoG0,
+    led         => open,
+    usb_kbd     => usb_kbd,
+    kbd_strobe  => kbd_strobe,
+    ps2_clk     => ps2_kbd_clk,
+    ps2_data    => ps2_kbd_data,
+    rxd         => uarttx,
+    txd         => uartrx
+);
 
 io1 : entity work.bufferedUART
 port map(
@@ -448,10 +480,28 @@ port map(
 -- Tang nano 9k LED
 LED(5 downto 0) <= "111111";
 
+sd1 : entity work.sd_controller
+port map(
+	sdCS => sdCS,
+	sdMOSI => sdMOSI,
+	sdMISO => sdMISO,
+	sdSCLK => sdSCLK,
+	n_wr => n_sdCardCS or cpuClock or n_WR,
+	n_rd => n_sdCardCS or cpuClock or (not n_WR),
+	n_reset => pll_lock,
+	dataIn => cpuDataOut,
+	dataOut => sdCardDataOut,
+	regAddr => cpuAddress(2 downto 0),
+	driveLED => open,
+	clk => sdClock -- twice the spi clk
+);
+
 -- ____________________________________________________________________________________
 -- MEMORY READ/WRITE LOGIC GOES HERE
+
 n_memRD <= not(cpuClock) nand n_WR;
 n_memWR <= not(cpuClock) nand (not n_WR);
+
 -- ____________________________________________________________________________________
 -- CHIP SELECTS GO HERE
 
@@ -471,6 +521,7 @@ cpuDataIn <=
     x"FF";
 
 -- SYSTEM CLOCKS GO HERE
+
 serialClock <= serialClkCount(15); -- 1.843 MHz
 
 process (clk_pixel_x2)
@@ -482,14 +533,25 @@ if rising_edge(clk_pixel_x2) then
     else
         cpuClkCount <= (others=>'0');
     end if;
-
     if cpuClkCount < 2 then -- 2 when 10MHz, 2 when 12.5MHz, 2 when 16.6MHz, 1 when 25MHz
         cpuClock <= '0';
     else
         cpuClock <= '1';
     end if;
 
-    serialClkCount <= serialClkCount + 2396;
-end if;
+    if sdClkCount < 49 then -- 1MHz
+        sdClkCount <= sdClkCount + 1;
+    else
+        sdClkCount <= (others=>'0');
+    end if;
+
+    if sdClkCount < 25 then
+        sdClock <= '0';
+    else
+        sdClock <= '1';
+    end if;
+
+        serialClkCount <= serialClkCount + 2396;
+    end if;
 end process;
 end;
