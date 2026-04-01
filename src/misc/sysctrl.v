@@ -23,8 +23,9 @@ module sysctrl (
 
   input [1:0]       buttons, // S0 and S1 buttons on Tang Nano 20k
 
-  output reg [1:0]  leds,  // two leds can be controlled from the MCU
+  output reg [1:0]  leds, // two leds can be controlled from the MCU
   output reg [23:0] color, // a 24bit color to e.g. be used to drive the ws2812
+
   // IO port interface
   input	[31:0]      port_status,         // status bits to report additional info about the port
   input	[7:0]       port_out_available,  // number of bytes available for transmission to MCU
@@ -45,25 +46,25 @@ module sysctrl (
 reg [3:0] state;
 reg [7:0] command;
 reg [7:0] id;
-   
+
 // reverse data byte for rgb   
 wire [7:0] data_in_rev = { data_in[0], data_in[1], data_in[2], data_in[3], 
                            data_in[4], data_in[5], data_in[6], data_in[7] };
 
-// coldboot flash and system interrupt   
-reg coldboot = 1'b1;   
+// coldboot flash and system interrupt
+reg coldboot = 1'b1;
 reg sys_int = 1'b1;
 
 // registers to report button interrupts
 reg [1:0] buttonsD, buttonsD2;
 reg	  buttons_irq_enable;
-   
+
 // the system cobtrol interrupt or any other interrupt (e,g sdc, hid, ...)
 // activates the interrupt line to the MCU by pulling it low
 assign int_out_n = (int_in != 8'h00 || sys_int)?1'b0:1'b1;
    
 reg       port_out_availableD;
-reg [7:0] port_cmd;   
+reg [7:0] port_cmd;
 reg [7:0] port_index;
 
 // include the menu rom derived from atarist.xml
@@ -82,7 +83,7 @@ always @(posedge clk)
 // process mouse events
 always @(posedge clk) begin
    if(reset) begin
-      state <= 4'd0;      
+      state <= 4'd0;
       leds <= 2'b00;        // after reset leds are off
       color <= 24'h000000;  // color black -> rgb led off
 
@@ -192,7 +193,7 @@ always @(posedge clk) begin
                 // the FPGA has been loaded via USB
                 data_out <= { int_in[7:1], sys_int };
             end
-	   
+
             // CMD 6: read system interrupt source
             if(command == 8'd6) begin
 	        // bit[0]: coldboot flag

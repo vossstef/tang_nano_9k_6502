@@ -25,8 +25,8 @@ module hid (
   // ps2 alternative interface.
   // [10] toggles with every press/release [9] pressed, [8] extended [7:0] key
   output reg [10:0]   ps2_key,
-  output              ps2_kbd_clk,
-  output              ps2_kbd_data,
+  output wire         ps2_kbd_clk,
+  output wire         ps2_kbd_data,
 
   // output HID data received from USB
   output reg [7:0]    joystick0,
@@ -112,6 +112,7 @@ end
 
 ps2_device keyboard (
     .clk_sys(clk),
+    .reset(reset),
 
     .wdata(kbd_data),
     .we(kbd_we),
@@ -119,13 +120,7 @@ ps2_device keyboard (
     .ps2_clk(clk_ps2),
     .ps2_clk_out(ps2_kbd_clk),
     .ps2_dat_out(ps2_kbd_data),
-    .tx_empty(),
-
-    .ps2_clk_in(1'b1),
-    .ps2_dat_in(1'b1),
-
-    .rdata(),
-    .rd(1'b0)
+    .tx_empty()
 );
 
 always @(posedge clk) begin
@@ -206,7 +201,6 @@ always @(posedge clk) begin
                if(state == 4'd0) begin
                 usb_kbd <= data_in;
                 kbd_strobe <= ~kbd_strobe;
-
                end
                if(state == 4'd1) begin
                     ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
@@ -214,12 +208,21 @@ always @(posedge clk) begin
                     kbd_data <= data_in;
                     kbd_we <= 1'b1;
                 end
-               if(state == 4'd2)
+               if(state == 4'd2) begin
                     ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
-               if(state == 4'd3)
+                    kbd_data <= data_in;
+                    kbd_we <= 1'b1;
+                end
+               if(state == 4'd3) begin
                     ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
-               if(state == 4'd4)
+                    kbd_data <= data_in;
+                    kbd_we <= 1'b1;
+                end
+               if(state == 4'd4) begin
                     ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
+                    kbd_data <= data_in;
+                    kbd_we <= 1'b1;
+                end
             end
 
             // CMD 2: mouse data
@@ -269,143 +272,117 @@ end
 
 endmodule
 
-module ps2_device #(parameter PS2_FIFO_BITS=5)
-(
-	input        clk_sys,
+module ps2_device #(
+    parameter int PS2_FIFO_BITS = 5
+)(
+    input  logic       clk_sys,
+    input  logic       reset,
 
-	input  [7:0] wdata,
-	input        we,
+    // TX interface (FPGA → host)
+    input  logic [7:0] wdata,
+    input  logic       we,
 
-	input        ps2_clk,
-	output reg   ps2_clk_out,
-	output reg   ps2_dat_out,
-	output reg   tx_empty,
-
-	input        ps2_clk_in,
-	input        ps2_dat_in,
-
-	output [8:0] rdata,
-	input        rd
+    // PS/2 clock (internal)
+    input  logic       ps2_clk,
+    output logic       ps2_clk_out,
+    output logic       ps2_dat_out,
+    output logic       tx_empty
 );
 
+    // FIFO
+    logic [7:0] fifo [0:(1<<PS2_FIFO_BITS)-1];
+    logic [PS2_FIFO_BITS-1:0] wptr = '0;
+    logic [PS2_FIFO_BITS-1:0] rptr = '0;
 
-reg [7:0] fifo[1<<PS2_FIFO_BITS];
+    // TX state
+    logic [3:0] tx_state = '0;
 
-reg [PS2_FIFO_BITS-1:0] wptr;
-reg [PS2_FIFO_BITS-1:0] rptr;
+    // Internal registers (moved out of always block)
+    logic [7:0] tx_byte = 8'h00;
+    logic       parity  = 1'b1;
+    logic       old_clk = 1'b0;
+    logic [1:0] timeout = 2'b11;
 
-reg [2:0] rx_state = 0;
-reg [3:0] tx_state = 0;
+    // Sequential logic
+    always_ff @(posedge clk_sys) begin
 
-reg       has_data;
-reg [7:0] data;
-assign    rdata = {has_data, data};
+        if (reset) begin
+            wptr        <= '0;
+            rptr        <= '0;
+            tx_state    <= '0;
+            tx_empty    <= 1'b1;
+            ps2_clk_out <= 1'b1;   // idle
+            ps2_dat_out <= 1'b1;   // idle
+            old_clk     <= ps2_clk;
+            timeout     <= 2'b11;
+        end else begin
 
-always@(posedge clk_sys) begin
-	reg [7:0] tx_byte;
-	reg parity;
-	reg r_inc;
-	reg old_clk;
-	reg [1:0] timeout;
+            // TX empty flag
+            tx_empty <= ((wptr == rptr) && (tx_state == 0));
 
-	reg [3:0] rx_cnt;
+            // Write into FIFO
+            if (we) begin
+                fifo[wptr] <= wdata;
+                wptr <= wptr + 1;
+            end
 
-	reg c1,c2,d1;
+            // Edge detect on internal ps2_clk
+            old_clk <= ps2_clk;
 
-	tx_empty <= ((wptr == rptr) && (tx_state == 0));
+            if (!old_clk && ps2_clk) begin
+                // --------------------
+                // TX state machine
+                // --------------------
+                if (tx_state == 0) begin
+                    // idle: check if we have data to send
+                    if (wptr != rptr) begin
+                        timeout <= timeout - 1;
+                        if (timeout == 0) begin
+                            tx_byte <= fifo[rptr];
+                            rptr    <= rptr + 1;
 
-	if(we && !has_data) begin
-		fifo[wptr] <= wdata;
-		wptr <= wptr + 1'd1;
-	end
+                            // reset parity (odd parity)
+                            parity  <= 1'b1;
 
-	if(rd) has_data <= 0;
+                            // start transmitter
+                            tx_state    <= 4'd1;
+                            ps2_dat_out <= 1'b0;   // start bit
+                        end
+                    end
+                end else begin
+                    // 1..8: data bits
+                    if (tx_state >= 1 && tx_state < 9) begin
+                        ps2_dat_out <= tx_byte[0];
+                        if (tx_byte[0])
+                            parity <= ~parity;
+                        tx_byte <= {1'b0, tx_byte[7:1]};
+                    end
 
-	c1 <= ps2_clk_in;
-	c2 <= c1;
-	d1 <= ps2_dat_in;
-	if(!rx_state && !tx_state && ~c2 && c1 && ~d1) begin
-		rx_state <= rx_state + 1'b1;
-		ps2_dat_out <= 1;
-	end
+                    // 9: parity bit
+                    if (tx_state == 9)
+                        ps2_dat_out <= parity;
 
-	old_clk <= ps2_clk;
-	if(~old_clk & ps2_clk) begin
+                    // 10: stop bit
+                    if (tx_state == 10)
+                        ps2_dat_out <= 1'b1;
 
-		if(rx_state) begin
-			case(rx_state)
-				1: begin
-						rx_state <= rx_state + 1'b1;
-						rx_cnt <= 0;
-					end
+                    // advance / wrap
+                    if (tx_state < 11)
+                        tx_state <= tx_state + 1;
+                    else begin
+                        tx_state <= 0;
+                        timeout  <= 2'b11;   // reload timeout
+                    end
+                end
+            end
 
-				2: begin
-						if(rx_cnt <= 7) data <= {d1, data[7:1]};
-						else rx_state <= rx_state + 1'b1;
-						rx_cnt <= rx_cnt + 1'b1;
-					end
+            // ps2_clk_out: internal "bus free" indicator
+            if (!old_clk && ps2_clk)
+                ps2_clk_out <= 1'b1;
 
-				3: if(d1) begin
-						rx_state <= rx_state + 1'b1;
-						ps2_dat_out <= 0;
-					end
-
-				4: begin
-						ps2_dat_out <= 1;
-						has_data <= 1;
-						rx_state <= 0;
-						rptr     <= 0;
-						wptr     <= 0;
-					end
-			endcase
-		end else begin
-
-			// transmitter is idle?
-			if(tx_state == 0) begin
-				// data in fifo present?
-				if(c2 && c1 && d1 && wptr != rptr) begin
-
-					timeout <= timeout - 1'd1;
-					if(!timeout) begin
-						tx_byte <= fifo[rptr];
-						rptr <= rptr + 1'd1;
-
-						// reset parity
-						parity <= 1;
-
-						// start transmitter
-						tx_state <= 1;
-
-						// put start bit on data line
-						ps2_dat_out <= 0;			// start bit is 0
-					end
-				end
-			end else begin
-
-				// transmission of 8 data bits
-				if((tx_state >= 1)&&(tx_state < 9)) begin
-					ps2_dat_out <= tx_byte[0];	          // data bits
-					tx_byte[6:0] <= tx_byte[7:1]; // shift down
-					if(tx_byte[0])
-						parity <= !parity;
-				end
-
-				// transmission of parity
-				if(tx_state == 9) ps2_dat_out <= parity;
-
-				// transmission of stop bit
-				if(tx_state == 10) ps2_dat_out <= 1;    // stop bit is 1
-
-				// advance state machine
-				if(tx_state < 11) tx_state <= tx_state + 1'd1;
-					else tx_state <= 0;
-			end
-		end
-	end
-
-	if(~old_clk & ps2_clk) ps2_clk_out <= 1;
-	if(old_clk & ~ps2_clk) ps2_clk_out <= ((tx_state == 0) && (rx_state<2));
-
-end
+            if (old_clk && !ps2_clk)
+                ps2_clk_out <= (tx_state == 0);
+        end
+    end
 
 endmodule
