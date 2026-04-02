@@ -27,7 +27,7 @@ entity SBCTextDisplayRGB is
 		constant HORIZ_CHARS : integer := 80;
 		constant CLOCKS_PER_SCANLINE : integer := 1600; -- NTSC/PAL = 3200
 		constant DISPLAY_TOP_SCANLINE : integer := 35+40;
-		constant DISPLAY_LEFT_CLOCK : integer := 288; -- NTSC/PAL = 600+
+		constant DISPLAY_LEFT_CLOCK : integer := 320; -- NTSC/PAL = 600+
 		constant VERT_SCANLINES : integer := 525; -- NTSC=262, PAL=312
 		constant VSYNC_SCANLINES : integer := 2; -- NTSC/PAL = 4
 		constant HSYNC_CLOCKS : integer := 192;  -- NTSC/PAL = 235
@@ -59,14 +59,17 @@ entity SBCTextDisplayRGB is
 		videoB1	: out std_logic;
 		hSync  	: buffer  std_logic;
 		vSync  	: buffer  std_logic;
-		
+		hBlank	: out std_logic;
+		vBlank	: out std_logic;
+		cepix    : out std_logic;
+	
 		-- Monochrome video signals
 		video		: buffer std_logic;
 		sync  	: out  std_logic;		
 		
 		-- Keyboard signals
-		ps2Clk	: inout std_logic;
-		ps2Data	: inout std_logic;
+		ps2Clk	: in std_logic;
+		ps2Data	: in std_logic;
  
 		-- FN keys passed out as general signals (momentary and toggled versions)
 		FNkeys	: out std_logic_vector(12 downto 0);
@@ -227,6 +230,33 @@ constant CHARS_PER_SCREEN : integer := HORIZ_CHARS*VERT_CHARS;
 --	);
 
 	-- 7 bits to reduce logic count
+	-- constant kbUnshifted : kbDataArray :=
+	-- (
+	-- --  0         1         2         3         4         5         6         7         8         9         A         B         C         D         E         F
+	-- "0000000","0011001","0000000","0000000","0010011","0010001","0010010","0011100","0000000","0011010","0011000","0010110","0000000","0001001","1100000","0000000", -- 0
+	-- "0000000","0000000","0000000","0000000","0000000","1110001","0110001","0000000","0000000","0000000","1111010","1110011","1100001","1110111","0110010","0000000", -- 1
+	-- "0000000","1100011","1111000","1100100","1100101","0110100","0110011","0000000","0000000","0100000","1110110","1100110","1110100","1110010","0110101","0000000", -- 2
+	-- "0000000","1101110","1100010","1101000","1100111","1111001","0110110","0000000","0000000","0000000","1101101","1101010","1110101","0110111","0111000","0000000", -- 3
+	-- "0000000","0101100","1101011","1101001","1101111","0110000","0111001","0000000","0000000","0101110","0101111","1101100","0111011","1110000","0101101","0000000", -- 4
+	-- "0000000","0000000","0100111","0000000","1011011","0111101","0000000","0000000","0000000","0000000","0001101","1011101","0000000","0000000","0000000","0000000", -- 5
+	-- "0000000","0000000","0000000","0000000","0000000","0000000","0001000","0000000","0000000","0110001","0000000","0110100","0110111","0000000","0000000","0000000", -- 6
+	-- "0110000","0101110","0110010","0110101","0110110","0111000","0000011","0000000","0011011","0101011","0110011","0101101","0101010","0111001","0000000","0000000", -- 7
+	-- "0000000","0000000","0000000","0010111"
+	-- );
+	-- constant kbShifted : kbDataArray :=
+	-- (
+	-- --  0         1         2         3         4         5         6         7         8         9         A         B         C         D         E         F
+	-- "0000000","0011001","0000000","0000000","0010011","0010001","0010010","0011100","0000000","0011010","0011000","0010110","0000000","0001001","0000000","0000000", -- 0
+	-- "0000000","0000000","0000000","0000000","0000000","1010001","0100001","0000000","0000000","0000000","1011010","1010011","1000001","1010111","0100010","0000000", -- 1
+	-- "0000000","1000011","1011000","1000100","1000101","0100100","0100011","0000000","0000000","0100000","1010110","1000110","1010100","1010010","0100101","0000000", -- 2
+	-- "0000000","1001110","1000010","1001000","1000111","1011001","1011110","0000000","0000000","0000000","1001101","1001010","1010101","0100110","0101010","0000000", -- 3
+	-- "0000000","0111100","1001011","1001001","1001111","0101001","0101000","0000000","0000000","0111110","0111111","1001100","0111010","1010000","1011111","0000000", -- 4
+	-- "0000000","0000000","1000000","0000000","1111011","0101011","0000000","0000000","0000000","0000000","0001101","1111101","0000000","0000000","0000000","0000000", -- 5
+	-- "0000000","0000000","0000000","0000000","0000000","0000000","0001000","0000000","0000000","0110001","0000000","0110100","0110111","0000000","0000000","0000000", -- 6
+	-- "0110000","0101110","0110010","0110101","0110110","0111000","0001100","0000000","0011011","0101011","0110011","0101101","0101010","0111001","0000000","0000000", -- 7
+	-- "0000000","0000000","0000000","0010111"
+	-- );
+
 	constant kbUnshifted : kbDataArray :=
 	(
 	--  0         1         2         3         4         5         6         7         8         9         A         B         C         D         E         F
@@ -235,137 +265,161 @@ constant CHARS_PER_SCREEN : integer := HORIZ_CHARS*VERT_CHARS;
 	"0000000","1100011","1111000","1100100","1100101","0110100","0110011","0000000","0000000","0100000","1110110","1100110","1110100","1110010","0110101","0000000", -- 2
 	"0000000","1101110","1100010","1101000","1100111","1111001","0110110","0000000","0000000","0000000","1101101","1101010","1110101","0110111","0111000","0000000", -- 3
 	"0000000","0101100","1101011","1101001","1101111","0110000","0111001","0000000","0000000","0101110","0101111","1101100","0111011","1110000","0101101","0000000", -- 4
-	"0000000","0000000","0100111","0000000","1011011","0111101","0000000","0000000","0000000","0000000","0001101","1011101","0000000","0000000","0000000","0000000", -- 5
+	"0000000","0000000","0100111","0000000","1011011","0111101","0000000","0000000","0000000","0000000","0001101","1011101","0000000","1011100","0000000","0000000", -- 5 -- Added \ at 0x5C
 	"0000000","0000000","0000000","0000000","0000000","0000000","0001000","0000000","0000000","0110001","0000000","0110100","0110111","0000000","0000000","0000000", -- 6
 	"0110000","0101110","0110010","0110101","0110110","0111000","0000011","0000000","0011011","0101011","0110011","0101101","0101010","0111001","0000000","0000000", -- 7
 	"0000000","0000000","0000000","0010111"
 	);
+
 	constant kbShifted : kbDataArray :=
 	(
 	--  0         1         2         3         4         5         6         7         8         9         A         B         C         D         E         F
-	"0000000","0011001","0000000","0000000","0010011","0010001","0010010","0011100","0000000","0011010","0011000","0010110","0000000","0001001","0000000","0000000", -- 0
-	"0000000","0000000","0000000","0000000","0000000","1010001","0100001","0000000","0000000","0000000","1011010","1010011","1000001","1010111","0100010","0000000", -- 1
+	"0000000","0011001","0000000","0000000","0010011","0010001","0010010","0011100","0000000","0011010","0011000","0010110","0000000","0001001","1111110","0000000", -- 0 -- Added ~ at 0x7E
+	"0000000","0000000","0000000","0000000","0000000","1010001","0100001","0000000","0000000","0000000","1011010","1010011","1000001","1010111","1000000","0000000", -- 1 -- @ on Shift-2
 	"0000000","1000011","1011000","1000100","1000101","0100100","0100011","0000000","0000000","0100000","1010110","1000110","1010100","1010010","0100101","0000000", -- 2
 	"0000000","1001110","1000010","1001000","1000111","1011001","1011110","0000000","0000000","0000000","1001101","1001010","1010101","0100110","0101010","0000000", -- 3
 	"0000000","0111100","1001011","1001001","1001111","0101001","0101000","0000000","0000000","0111110","0111111","1001100","0111010","1010000","1011111","0000000", -- 4
-	"0000000","0000000","1000000","0000000","1111011","0101011","0000000","0000000","0000000","0000000","0001101","1111101","0000000","0000000","0000000","0000000", -- 5
+	"0000000","0000000","0100010","0000000","1111011","0101011","0000000","0000000","0000000","0000000","0001101","1111101","0000000","1111100","0000000","0000000", -- 5 -- " on Shift-' and | at 0x7C
 	"0000000","0000000","0000000","0000000","0000000","0000000","0001000","0000000","0000000","0110001","0000000","0110100","0110111","0000000","0000000","0000000", -- 6
 	"0110000","0101110","0110010","0110101","0110110","0111000","0001100","0000000","0011011","0101011","0110011","0101101","0101010","0111001","0000000","0000000", -- 7
 	"0000000","0000000","0000000","0010111"
 	);
-
-	
 begin
 
 -- DISPLAY ROM AND RAM
 
 GEN_EXT_CHARS: if (EXTENDED_CHARSET=1) generate
 begin	
-	fontRom : entity work.CGABoldRom -- 256 chars (2K)
+	fontRom : entity work.Gowin_ROM_CGABoldRom
+	-- CGABoldRom 
+	-- 256 chars (2K)
 	port map(
-		address => charAddr,
-		clock => clk,
-		q => charData
+		ad   => charAddr,
+		clk  => clk,
+		dout => charData,
+        oce  => '1',
+        ce   => '1',
+        reset=> '0'
 	);
 end generate GEN_EXT_CHARS;
 	
 GEN_REDUCED_CHARS: if (EXTENDED_CHARSET=0) generate
 begin	
-	fontRom : entity work.fontRom -- 128 chars (1K)
+	fontRom : entity work.Gowin_ROM_CGAFontBoldReduced
+	-- 128 chars (1K)
 	port map(
-		ad => charAddr(9 downto 0),
+		ad => charAddr, -- (9 downto 0),
 		clk => clk,
 		dout => charData,
-        reset => '0',
-        ce => '1',
-        oce => '1'
+        oce  => '1',
+        ce   => '1',
+        reset=> '0'
 	);
 end generate GEN_REDUCED_CHARS;
 
 GEN_2KRAM: if (CHARS_PER_SCREEN >1024) generate
 begin	
- 	dispCharRam: entity work.Gowin_SDPB -- For 80x25 display character storage
-	port map
-	(
-		clka	=> clk,
-        clkb	=> clk,
+ 	dispCharRam: entity work.Gowin_DP_2k
+	-- For 80x25 display character storage
+	port map (
+        clkb => clk,
+		adb => std_logic_vector(to_unsigned(cursAddr,11)),
+		dinb => dispCharWRData,
+		doutb => dispCharRDData,
+		resetb => '0',
+        ceb => '1',
+		oceb => '1',
+		wreb => dispWR,
 
-		ada => std_logic_vector(to_unsigned(cursAddr,11)),
-		din => dispCharWRData,
-
-
-		adb => std_logic_vector(to_unsigned(dispAddr,11)),
-		dout => dispCharData,
-
+		clka => clk,
+		ada => std_logic_vector(to_unsigned(dispAddr,11)),
+		dina => (others => '0'),
+	    douta => dispCharData,
         reseta => '0',
+		wrea => '0',
         cea => '1',
-        oce => '1',
-
-        resetb => '0',
-        ceb => '1'
+        ocea => '1'
 	);
 end generate GEN_2KRAM;
-
 
 GEN_2KATTRAM: if (CHARS_PER_SCREEN >1024 and COLOUR_ATTS_ENABLED=1) generate
 begin	
 
- 	dispAttRam: entity work.Gowin_SDPB -- For 80x25 display attribute storage
+ 	dispAttRam: entity work.Gowin_DP_2k-- For 80x25 display attribute storage
 	port map
 	(
 		clka	=> clk,
-        clkb	=> clk,
 
-		ada => std_logic_vector(to_unsigned(cursAddr,11)),
-		din => dispAttWRData,
-
-		adb => std_logic_vector(to_unsigned(dispAddr,11)),
-		dout => dispAttData,
-
-        reseta => '0',
+		adb => std_logic_vector(to_unsigned(cursAddr,11)),
+		dinb => dispAttWRData,
+		doutb => dispAttRDData,
+		wreb => dispWR,
+		reseta => '0',
         cea => '1',
-        oce => '1',
+        ocea => '1',
 
+        clkb	=> clk,
+		ada => std_logic_vector(to_unsigned(dispAddr,11)),
+		douta => dispAttData,
+		dina => (others => '0'),
+		wrea => '0',
         resetb => '0',
-        ceb => '1'
+        ceb => '1',
+		oceb => '1'
 	);
 
 end generate GEN_2KATTRAM;
 
 GEN_1KRAM: if (CHARS_PER_SCREEN <1025) generate
 begin	
- 	dispCharRam: entity work.DisplayRam1K -- For 40x25 display character storage
+ 	dispCharRam: entity work.Gowin_DP
+	-- For 40x25 display character storage
 	port map
 	(
-		clock	=> clk,
+		clka	=> clk,
+		clkb	=> clk,
+		ocea    => '1',
+		oceb    => '1',
+		cea     => '1',
+		ceb     => '1',
+        reseta  => '0',
+        resetb  => '0',
 
-		address_b => std_logic_vector(to_unsigned(cursAddr,10)),
-		data_b => dispCharWRData,
-		q_b => dispCharRDData,
-		wren_b => dispWR,
+		adb => std_logic_vector(to_unsigned(cursAddr,10)),
+		dinb => dispCharWRData,
+		doutb => dispCharRDData,
+		wreb => dispWR,
 
-		address_a => std_logic_vector(to_unsigned(dispAddr,10)),
-		data_a => (others => '0'),
-		q_a => dispCharData,
-		wren_a => '0'
+		ada => std_logic_vector(to_unsigned(dispAddr,10)),
+		dina => (others => '0'),
+		douta => dispCharData,
+		wrea => '0'
 	);
 end generate GEN_1KRAM;
 
 GEN_1KATTRAM: if (CHARS_PER_SCREEN <1025 and COLOUR_ATTS_ENABLED=1) generate
- 	dispAttRam: entity work.DisplayRam1K -- For 40x25 display attribute storage
+ 	dispAttRam: entity work.Gowin_DP
+	-- For 40x25 display attribute storage
 	port map
 	(
-		clock	=> clk,
+		clka	=> clk,
+		clkb	=> clk,
+		ocea    => '1',
+		oceb    => '1',
+		cea     => '1',
+		ceb     => '1',
+        reseta  => '0',
+        resetb  => '0',
 
-		address_b => std_logic_vector(to_unsigned(cursAddr,10)),
-		data_b => dispAttWRData,
-		q_b => dispAttRDData,
-		wren_b => dispWR,
+		adb => std_logic_vector(to_unsigned(cursAddr,10)),
+		dinb => dispAttWRData,
+		doutb => dispAttRDData,
+		wreb => dispWR,
 
-		address_a => std_logic_vector(to_unsigned(dispAddr,10)),
-		data_a => (others => '0'),
-		q_a => dispAttData,
-		wren_a => '0'
+		ada => std_logic_vector(to_unsigned(dispAddr,10)),
+		dina => (others => '0'),
+		douta => dispAttData,
+		wrea => '0'
 	);
 
 end generate GEN_1KATTRAM;
@@ -376,10 +430,6 @@ dispAttData <= dispAttWRData; -- If no attribute RAM then two colour output on R
 
 end generate GEN_NO_ATTRAM;
 
-    --rik
-    dispCharRDData <= dispCharData;
-    dispAttRDData <= dispAttData;
-    -- end rik
 
 	FNkeys <= FNkeysSig;
 	FNtoggledKeys <= FNtoggledKeysSig;	
@@ -389,24 +439,32 @@ end generate GEN_NO_ATTRAM;
 	dispAddr <= (startAddr + charHoriz+(charVert * HORIZ_CHARS)) mod CHARS_PER_SCREEN;
 	cursAddr <= (startAddr + cursorHoriz+(cursorVert * HORIZ_CHARS)) mod CHARS_PER_SCREEN;
 
-	sync <= vSync and hSync; -- composite sync for mono video out	
-	
+	sync <= vSync and hSync; -- composite sync for mono video out
+
 	-- SCREEN RENDERING
 	
 	process (clk)
 	begin
 		if falling_edge(clk) then
 
-			if horizCount < CLOCKS_PER_SCANLINE then
+			cepix <= '0';
+			if pixelClockCount < (CLOCKS_PER_PIXEL-1) then
+				pixelClockCount <= pixelClockCount+1;
+			else
+				pixelClockCount <= (others => '0');
+				cepix <= '1';
+			end if;
+			
+			if horizCount < (CLOCKS_PER_SCANLINE-1) then
 				horizCount <= horizCount + 1;
-				if (horizCount < DISPLAY_LEFT_CLOCK) or (horizCount > (DISPLAY_LEFT_CLOCK + HORIZ_CHARS*CLOCKS_PER_PIXEL*8)) then
+				if (horizCount < DISPLAY_LEFT_CLOCK) or (horizCount >= (DISPLAY_LEFT_CLOCK + HORIZ_CHARS*CLOCKS_PER_PIXEL*8)) then
 					hActive <= '0';
-					pixelClockCount <= (others => '0');
 					charHoriz <= 0;
 				else
 					hActive <= '1';
 				end if;
 			else
+				pixelClockCount <= (others => '0');
 				horizCount<= (others => '0');
 				pixelCount<= (others => '0');
 				charHoriz<= 0;
@@ -442,10 +500,11 @@ end generate GEN_NO_ATTRAM;
 				vSync <= not V_SYNC_ACTIVE;
 			end if;
 			
-			if hActive='1' and vActive = '1' then
-				if pixelClockCount <(CLOCKS_PER_PIXEL-1) then
-					pixelClockCount <= pixelClockCount+1;
-				else
+			if pixelClockCount = (CLOCKS_PER_PIXEL-1) then
+				vBlank <= not vActive;
+				hBlank <= not hActive;
+				if hActive='1' and vActive = '1' then
+
 					if cursorOn = '1' and cursorVert = charVert and cursorHoriz = charHoriz and charScanLine = (VERT_PIXEL_SCANLINES*8-1) then
 					   -- Cursor (use current colour because cursor cell not yet written to)
 						if dispAttData(3)='1' then -- BRIGHT
@@ -512,21 +571,20 @@ end generate GEN_NO_ATTRAM;
 						end if;
 						video <= charData(7-to_integer(unsigned(pixelCount))); -- Monochrome video out
 					end if;
-					pixelClockCount <= (others => '0');
 					if pixelCount = 7 then
 						charHoriz <= charHoriz+1;
 					end if;
 					pixelCount <= pixelCount+1;
+				else
+					videoR0 <= '0';
+					videoG0 <= '0';
+					videoB0 <= '0';
+					videoR1 <= '0';
+					videoG1 <= '0';
+					videoB1 <= '0';
+					
+					video <= '0'; -- Monochrome video out
 				end if;
-			else
-				videoR0 <= '0';
-				videoG0 <= '0';
-				videoB0 <= '0';
-				videoR1 <= '0';
-				videoG1 <= '0';
-				videoB1 <= '0';
-				
-				video <= '0'; -- Monochrome video out
 			end if;
 		end if;
 	end process;	
@@ -602,8 +660,8 @@ end generate GEN_NO_ATTRAM;
 
 	-- PROCESS DATA FROM PS2 KEYBOARD
 
-	ps2Data <= ps2DataOut when ps2DataOut='0' else 'Z';
-	ps2Clk <= ps2ClkOut when ps2ClkOut='0' else 'Z';
+--	ps2Data <= ps2DataOut when ps2DataOut='0' else 'Z';
+--	ps2Clk <= ps2ClkOut when ps2ClkOut='0' else 'Z';
 
 	-- PS2 clock de-glitcher - important because the FPGA is very sensistive
 	-- Filtered clock will not switch low to high until there is 50 more high samples than lows
