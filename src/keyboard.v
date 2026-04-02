@@ -83,7 +83,7 @@ module keyboard
          ps2_break_keycode <= 0;
          ps2_long_keycode <= 0;
 
-         modifier_pressed = 6'h00;
+         modifier_pressed <= 6'h00;
          caps_lock_active <= 1;  // default caps lock active to get capital characters
          special_data <= 0;
       end
@@ -100,18 +100,16 @@ module keyboard
                 if(ps2_count == 10) begin
                    // 11 bits means we are done (XXX/TODO check parity and stop bits)
                    ps2_count <= 0;
-                   ps2_byte <= ps2_raw_data[10:3];
-                   // handle the breaks & long keycodes and only change to
-                   // keycode state if a complete keycode is already received
-                   if (ps2_raw_data[10:3] == 8'he0) begin
-                      ps2_break_keycode <= 0;
-                      ps2_long_keycode <= 1;
+                   ps2_byte <= ps2_raw_data[8:1];
+                   if (ps2_byte == 8'he0) begin
+                     ps2_break_keycode <= 0;
+                     ps2_long_keycode  <= 1;
                    end
-                   else if (ps2_raw_data[10:3] == 8'hf0) begin
-                      ps2_break_keycode <= 1;
+                   else if (ps2_byte == 8'hf0) begin
+                     ps2_break_keycode <= 1;
                    end
                    else begin
-                      state <= state_keymap;
+                     state <= state_keymap;
                    end
                 end
                 else begin

@@ -7,18 +7,18 @@
   */
 
 module hid (
-  input               clk,
-  input               reset,
+  input wire          clk,
+  input wire          reset,
 
-  input               data_in_strobe,
-  input               data_in_start,
+  input wire          data_in_strobe,
+  input wire          data_in_start,
   input [7:0]         data_in,
   output reg [7:0]    data_out,
 
   // input local db9 port events to be sent to MCU
   input  [5:0]        db9_port,
   output reg          irq,
-  input               iack,
+  input  wire         iack,
   output reg [7:0]    usb_kbd,
   output reg          kbd_strobe,
 
@@ -110,6 +110,8 @@ always @(posedge clk) begin
     end
 end
 
+wire ps2_clk, ps2_data;
+
 ps2_device keyboard (
     .clk_sys(clk),
     .reset(reset),
@@ -118,10 +120,13 @@ ps2_device keyboard (
     .we(kbd_we),
 
     .ps2_clk(clk_ps2),
-    .ps2_clk_out(ps2_kbd_clk),
-    .ps2_dat_out(ps2_kbd_data),
+    .ps2_clk_out(ps2_clk),
+    .ps2_dat_out(ps2_data),
     .tx_empty()
 );
+
+assign ps2_kbd_clk = ps2_clk;
+assign ps2_kbd_data = ps2_data;
 
 always @(posedge clk) begin
    if(reset) begin

@@ -1,20 +1,20 @@
 module vt52 (
-            input clk,
-            input clk_pixel,
-            input uart_clk,
-            input pll_lock,
-            output hsync,
-            output vsync,
-            output vblank,
-            output hblank,
-            output video,
-            output led,
-            input [7:0] usb_kbd,
-            input kbd_strobe,
-            input ps2_clk,
-            input ps2_data,
-            input  rxd,
-            output txd
+            input wire clk,
+            input wire clk_pixel,
+            input wire uart_clk,
+            input wire pll_lock,
+            output wire hsync,
+            output wire vsync,
+            output wire vblank,
+            output wire hblank,
+            output wire video,
+            output wire led,
+            input wire [7:0] usb_kbd,
+            input wire kbd_strobe,
+            input wire ps2_clk,
+            input wire ps2_data,
+            input wire rxd,
+            output wire txd
             );
    localparam ROWS = 25;
    localparam COLS = 80;

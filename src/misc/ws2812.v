@@ -1,6 +1,6 @@
 module ws2812 (
-	input 	     clk,    // input clock source
-    input [23:0] color,  // requested color
+	input wire     clk,    // input clock source
+    input wire [23:0] color,  // requested color
 	output reg   data    // output to the interface of WS2812
 );
 
