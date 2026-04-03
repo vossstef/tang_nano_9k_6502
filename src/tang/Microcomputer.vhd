@@ -135,6 +135,7 @@ signal ps2_kbd_clk    : std_logic;
 signal ps2_kbd_data   : std_logic;
 signal reset_counter  : unsigned(15 downto 0) := (others => '0');
 signal reset_n_internal : std_logic := '0';
+signal por : std_logic;
 
 component CLKDIV
     generic (
@@ -392,12 +393,14 @@ begin
 	end if;
 end process;
 
+por <= '0' when pll_lock = '0' or system_reset(0) = '1' else '1';
+
 -- CPU CHOICE GOES HERE
 cpu1 : entity work.T65
 port map(
     Enable => '1',
     Mode => "00",
-    Res_n => reset_n_internal, -- '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
+    Res_n => por,
     Clk => cpuClock,
     Rdy => '1',
     Abort_n => '1',
@@ -444,7 +447,7 @@ port map (
     clk         => clk_pixel_x2, -- 50.4Mhz
     clk_pixel   => clk_pixel,    -- 25.2Mhz
     uart_clk    => serialClock, -- 1.8MHz
-    pll_lock    => pll_lock,
+    pll_lock    => por,
     hsync       => hSync,
     vsync       => vSync,
     vblank      => vblank,
