@@ -94,19 +94,9 @@ module keyboard
    assign ps2_falling_edge =
        (ps2_clk_filt[1] == 1'b1 && ps2_clk_filt[0] == 1'b0);
 
-   // ------------------------------------------------------------
-   // PS/2 parity + framing check
-   // ------------------------------------------------------------
-   wire start_ok = (ps2_shift[0]  == 1'b0);
-   wire stop_ok  = (ps2_shift[10] == 1'b1);
-
-   wire computed_parity =
-       ~(ps2_shift[8] ^ ps2_shift[7] ^ ps2_shift[6] ^
-         ps2_shift[5] ^ ps2_shift[4] ^ ps2_shift[3] ^
-         ps2_shift[2] ^ ps2_shift[1]);
-
-   wire parity_ok = (computed_parity == ps2_shift[9]);
-
+   reg [10:0] frame;
+   reg        start_ok_r, stop_ok_r, parity_ok_r;
+   reg        computed_parity_r;
    // ------------------------------------------------------------
    // Main logic
    // ------------------------------------------------------------
@@ -148,30 +138,42 @@ module keyboard
               4'd8: ps2_shift[8]  <= ps2_data; // data7
               4'd9: ps2_shift[9]  <= ps2_data; // parity
               4'd10: begin
-                  ps2_shift[10] <= ps2_data;    // stop
-                  ps2_bitcount  <= 4'd0;
+                // -------------------------------
+                // FINAL BIT (STOP) + VALIDATION
+                // -------------------------------
+                frame       = ps2_shift;
+                frame[10]   = ps2_data;   // current stop bit
+                ps2_bitcount <= 4'd0;
 
-                  if (start_ok && stop_ok && parity_ok) begin
-                      new_byte  = ps2_shift[8:1];
-                      ps2_byte <= new_byte;
+                start_ok_r  = (frame[0]  == 1'b0);
+                stop_ok_r   = (frame[10] == 1'b1);
+                computed_parity_r =
+                    ~(frame[8] ^ frame[7] ^ frame[6] ^
+                    frame[5] ^ frame[4] ^ frame[3] ^
+                    frame[2] ^ frame[1]);
+                parity_ok_r = (computed_parity_r == frame[9]);
 
-                      if (new_byte == 8'hE0) begin
-                          ps2_long_keycode  <= 1'b1;
-                          ps2_break_keycode <= 1'b0;
-                      end
-                      else if (new_byte == 8'hF0) begin
-                          ps2_break_keycode <= 1'b1;
-                      end
-                      else begin
-                          state <= state_keymap;
-                      end
-                  end
-                  else begin
-                      ps2_long_keycode  <= 1'b0;
-                      ps2_break_keycode <= 1'b0;
-                  end
-              end
-            endcase
+                if (start_ok_r && stop_ok_r && parity_ok_r) begin
+                    new_byte  = frame[8:1];
+                    ps2_byte <= new_byte;
+
+                    if (new_byte == 8'hE0) begin
+                        ps2_long_keycode  <= 1'b1;
+                        ps2_break_keycode <= 1'b0;
+                    end
+                    else if (new_byte == 8'hF0) begin
+                        ps2_break_keycode <= 1'b1;
+                    end
+                    else begin
+                        state <= state_keymap;
+                    end
+                end
+                else begin
+                    ps2_long_keycode  <= 1'b0;
+                    ps2_break_keycode <= 1'b0;
+                end
+            end
+          endcase
 
             if (ps2_bitcount != 4'd10)
                 ps2_bitcount <= ps2_bitcount + 1'b1;
@@ -183,7 +185,7 @@ module keyboard
          case (state)
 
            state_idle: begin
-               // idle; PS/2 receiver above will move us to keymap
+
            end
 
            state_keymap: begin
@@ -256,7 +258,7 @@ module keyboard
            end
 
            state_esc_char: begin
-               if (valid == 0 && can_send) begin
+               if (!valid && can_send) begin
                    data  <= {
                        1'b0,
                        control_pressed ? 2'b00 : special_data[6:5],
