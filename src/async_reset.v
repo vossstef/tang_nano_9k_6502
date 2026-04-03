@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-`default_nettype none
 
 // Project F: Async Reset
 // (C)2019 Will Green, Open source hardware released under the MIT License
@@ -11,7 +10,7 @@ module async_reset(
     output reg  o_rst       // output reset
     );
 
-    (* ASYNC_REG = "TRUE" *) reg [1:0] rst_shf;  // reset shift reg
+    reg [1:0] rst_shf;  // reset shift reg
 
     initial o_rst = 1'b1;       // start off with reset asserted
     initial rst_shf = 2'b11;    //  and reset shift reg populated

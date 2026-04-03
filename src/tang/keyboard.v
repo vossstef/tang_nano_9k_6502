@@ -1,11 +1,11 @@
 module keyboard(
-   input clk,
-   input reset,
-   input [7:0] usb_kbd,
-   input kbd_strobe,
+   input wire clk,
+   input wire reset,
+   input wire [7:0] usb_kbd,
+   input wire kbd_strobe,
    output reg [7:0] data,
    output reg valid,
-   input ready
+   input wire ready
    );
 
    reg old_kbd_strobe;

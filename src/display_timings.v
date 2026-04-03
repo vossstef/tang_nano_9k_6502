@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-`default_nettype none
 
 // Project F: Display Timings
 // (C)2019 Will Green, Open Source Hardware released under the MIT License
