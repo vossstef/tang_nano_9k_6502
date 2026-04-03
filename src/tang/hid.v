@@ -3,7 +3,7 @@
  
     hid (keyboard, mouse etc) interface to the IO MCU
 
-    c64 core specific variant of hid
+    core specific variant of hid
   */
 
 module hid (
@@ -45,7 +45,6 @@ module hid (
   output reg [7:0]    extra_button1
 );
 
-
 reg [3:0] state;
 reg [7:0] command;
 reg [7:0] device;   // used for joystick
@@ -54,50 +53,10 @@ reg [5:0] db9_portD;
 reg [5:0] db9_portD2;
 reg  [7:0] kbd_data;
 reg        kbd_we;
-
-// [10] toggles with every press/release [9] pressed, [8] extended [7:0] key
-
 reg [31:0] ps2_key_raw = 0;
 reg ps2skip = 1'b0;
 wire pressed  = (ps2_key_raw[15:8] != 8'hf0);
 wire extended = (~pressed ? (ps2_key_raw[23:16] == 8'he0) : (ps2_key_raw[15:8] == 8'he0));
-
-//kbd_tx(0x69);   // HID: Shift make
-//kbd_tx(0x12);   // PS/2: Shift make
-
-//kbd_tx(0x04);   // HID: A make
-//kbd_tx(0x1C);   // PS/2: A make
-
-//kbd_tx(0x84);   // HID: A break
-//kbd_tx(0xF0);   // PS/2: break
-//kbd_tx(0x1C);   // PS/2: A break
-
-//kbd_tx(0xE9);   // HID: Shift break
-//kbd_tx(0xF0);   // PS/2: break
-//kbd_tx(0x12);   // PS/2: Shift break
-
-
-//kbd_tx(0x4F);   // HID make (Right Arrow)
-//kbd_tx(0xE0);   // PS/2 E0
-//kbd_tx(0x74);   // PS/2 make
-
-//kbd_tx(0xCF);   // HID break
-//kbd_tx(0xE0);   // PS/2 E0
-//kbd_tx(0xF0);   // PS/2 break
-//kbd_tx(0x74);   // PS/2 break
-
-
-// Right Alt pressed
-//kbd_tx(0x6E);   // HID modifier make
-//kbd_tx(0xE0);   // PS/2 E0
-//kbd_tx(0x11);   // PS/2 make
-
-// Right Alt released
-//kbd_tx(0xEE);   // HID modifier break (0x80 | 0x6E)
-//kbd_tx(0xE0);   // PS/2 E0
-//kbd_tx(0xF0);   // PS/2 break
-//kbd_tx(0x11);   // PS/2 code
-
 reg clk_ps2;
 reg [11:0] cnt = 0;
 
