@@ -20,6 +20,7 @@ module hid (
   output reg          irq,
   input  wire         iack,
   output reg [7:0]    usb_kbd,
+  output reg [7:0]    usb_kbd_extra,
   output reg          kbd_strobe,
 
   // ps2 alternative interface.
@@ -167,13 +168,11 @@ always @(posedge clk) begin
                 kbd_strobe <= ~kbd_strobe;
                end
                if(state == 4'd1) begin
-                    ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
-                    ps2skip <= 1'b1;
-                    kbd_data <= data_in;
-                    kbd_we <= 1'b1;
-                end
+                usb_kbd_extra <= data_in;
+               end
                if(state == 4'd2) begin
                     ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
+                    ps2skip <= 1'b1;
                     kbd_data <= data_in;
                     kbd_we <= 1'b1;
                 end
@@ -183,6 +182,11 @@ always @(posedge clk) begin
                     kbd_we <= 1'b1;
                 end
                if(state == 4'd4) begin
+                    ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
+                    kbd_data <= data_in;
+                    kbd_we <= 1'b1;
+                end
+               if(state == 4'd5) begin
                     ps2_key_raw[31:0] <= {ps2_key_raw[23:0], data_in};
                     kbd_data <= data_in;
                     kbd_we <= 1'b1;
