@@ -2,8 +2,8 @@
  * 80x24 char generator (8x16 char size) & sync generator
  */
 module video_generator
-   (input clk,
-    input reset,
+   (input wire clk,
+    input wire reset,
     // video output
     output reg hsync,
     output reg vsync,
@@ -12,17 +12,17 @@ module video_generator
     output reg hblank,
     output reg vblank,
     // cursor
-    input  [7-1:0] cursor_x,
-    input  [5-1:0] cursor_y,
-    input  cursor_blink_on,
+    input wire [7-1:0] cursor_x,
+    input wire [5-1:0] cursor_y,
+    input wire cursor_blink_on,
     // scrolling
-    input  [11-1:0] first_char,
+    input wire [11-1:0] first_char,
     // char buffer
-    output  [11-1:0] char_buffer_address,
-    input  [7:0] char_buffer_data,
+    output wire [11-1:0] char_buffer_address,
+    input wire [7:0] char_buffer_data,
     // char rom
-    output  [11:0] char_rom_address,
-    input  [7:0] char_rom_data
+    output wire [11:0] char_rom_address,
+    input wire [7:0] char_rom_data
     );
    localparam PAST_LAST_ROW = 25 * 80;
    localparam hbits = 10;
