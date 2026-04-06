@@ -23,6 +23,7 @@
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/keyboard.v" type="file.verilog" enable="1"/>
         <File path="src/keymap_rom.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
         <File path="src/misc/osd_u8g2.v" type="file.verilog" enable="1"/>
         <File path="src/misc/sd_card.v" type="file.verilog" enable="1"/>
@@ -33,7 +34,6 @@
         <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
         <File path="src/misc/ws2812.v" type="file.verilog" enable="1"/>
         <File path="src/simple_register.v" type="file.verilog" enable="1"/>
-        <File path="src/tang/hid.v" type="file.verilog" enable="1"/>
         <File path="src/tang/video_generator.v" type="file.verilog" enable="1"/>
         <File path="src/tang/vt52.v" type="file.verilog" enable="1"/>
         <File path="src/uart.v" type="file.verilog" enable="1"/>

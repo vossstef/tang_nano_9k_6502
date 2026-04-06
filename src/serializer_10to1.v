@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 // Project F: Display 10:1 Serializer
 // (C)2019 Will Green, Open source hardware released under the MIT License
 // Learn more at https://projectf.io

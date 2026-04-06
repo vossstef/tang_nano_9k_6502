@@ -24,8 +24,6 @@ THE SOFTWARE.
 
 // Language: Verilog 2001
 
-`timescale 1ns / 1ps
-
 /*
  * AXI4-Stream UART
  */
