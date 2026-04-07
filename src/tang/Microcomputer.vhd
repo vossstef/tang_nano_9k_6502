@@ -20,14 +20,15 @@ use  IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity Microcomputer is
 port(
-    reset           : in std_logic;
+    key_reset       : in std_logic; -- S2 button
+    key_user        : in std_logic; -- S1 button
     clk             : in std_logic;
+
     tmds_clk_p      : out std_logic;
     tmds_clk_n      : out std_logic;
     tmds_d_p        : out std_logic_vector(2 downto 0);
     tmds_d_n        : out std_logic_vector(2 downto 0);
-    LED             : out std_logic_vector(5 downto 0);
-    user_button     : in std_logic;
+    leds_n          : out std_logic_vector(5 downto 0);
     -- SPI connection to onboard BL616
     spi_sclk        : in std_logic;
     spi_csn         : in std_logic;
@@ -135,7 +136,9 @@ signal ps2_kbd_clk    : std_logic;
 signal ps2_kbd_data   : std_logic;
 signal reset_counter  : unsigned(15 downto 0) := (others => '0');
 signal reset_n_internal : std_logic := '0';
-signal por : std_logic;
+signal por            : std_logic;
+signal system_wide_screen : std_logic;
+signal leds           : std_logic_vector(5 downto 0);
 
 component CLKDIV
     generic (
@@ -162,7 +165,6 @@ begin
 -- 252Mhz and 126Mhz
 pll_inst: entity work.Gowin_rPLL_126mhz
     port map (
-        reset   => reset,
         clkout  => clk_pixel_x10,
         clkoutd => clk_pixel_x5,
         lock    => pll_lock,
@@ -276,7 +278,9 @@ module_inst: entity work.sysctrl
   data_out            => sys_data_out,
   -- values that can be configured by the user
   system_reset        => system_reset,
+  system_wide_screen  => system_wide_screen, 
   system_scanlines    => system_scanlines,
+  system_lores_text   => open,
   -- port io (used to expose rs232)
   port_status         => (others=>'0'),
   port_out_available  => (others=>'0'),
@@ -290,7 +294,7 @@ module_inst: entity work.sysctrl
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => unsigned'(user_button & reset),
+  buttons             => unsigned'(key_user & key_reset), -- S2 and S1 buttons
   leds                => open,
   color               => ws2812_color
 );
@@ -366,7 +370,7 @@ port map(
       mcu_data  => mcu_data_out,
 
       -- values that can be configure by the user via osd
-      system_wide_screen => '0',
+      system_wide_screen => system_wide_screen,
       system_scanlines => system_scanlines,
       system_volume => "00",
 
@@ -453,7 +457,7 @@ port map (
     vblank      => vblank,
     hblank      => hblank,
     video       => videoG0,
-    led         => open,
+    led         => leds(0),
     usb_kbd     => usb_kbd,
     kbd_strobe  => kbd_strobe,
     ps2_clk     => ps2_kbd_clk,
@@ -480,8 +484,8 @@ port map(
     n_rts => rts1
 );
 
--- Tang nano 9k LED
-LED(5 downto 0) <= "111111";
+leds_n <= not leds;
+leds(5 downto 1) <= "00000";
 
 sd1 : entity work.sd_controller
 port map(
