@@ -1,6 +1,3 @@
-`timescale 1ns / 1ps
-`default_nettype none
-
 // Project F: Display DVI Generator
 // (C)2019 Will Green, Open Source Hardware released under the MIT License
 // Learn more at https://projectf.io

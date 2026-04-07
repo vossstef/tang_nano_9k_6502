@@ -20,15 +20,14 @@ use  IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity Microcomputer is
 port(
-    key_reset       : in std_logic; -- S2 button
-    key_user        : in std_logic; -- S1 button
+    reset           : in std_logic;
     clk             : in std_logic;
-
     tmds_clk_p      : out std_logic;
     tmds_clk_n      : out std_logic;
     tmds_d_p        : out std_logic_vector(2 downto 0);
     tmds_d_n        : out std_logic_vector(2 downto 0);
-    leds_n          : out std_logic_vector(5 downto 0);
+    LED             : out std_logic_vector(5 downto 0);
+    user_button     : in std_logic;
     -- SPI connection to onboard BL616
     spi_sclk        : in std_logic;
     spi_csn         : in std_logic;
@@ -91,8 +90,12 @@ signal cpuClock: std_logic;
 signal serialClock: std_logic;
 signal sdClock: std_logic;
 
-signal videoG0      : std_logic;
+signal videoR0        : std_logic;
+signal videoG0        : std_logic;
+signal videoB0        : std_logic;
+signal videoR         : std_logic_vector(3 downto 0);
 signal videoG         : std_logic_vector(3 downto 0);
+signal videoB         : std_logic_vector(3 downto 0);
 signal hSync          : std_logic;
 signal vSync          : std_logic;
 signal vblank         : std_logic;
@@ -136,9 +139,6 @@ signal ps2_kbd_clk    : std_logic;
 signal ps2_kbd_data   : std_logic;
 signal reset_counter  : unsigned(15 downto 0) := (others => '0');
 signal reset_n_internal : std_logic := '0';
-signal por            : std_logic;
-signal system_wide_screen : std_logic;
-signal leds           : std_logic_vector(5 downto 0);
 
 component CLKDIV
     generic (
@@ -165,6 +165,7 @@ begin
 -- 252Mhz and 126Mhz
 pll_inst: entity work.Gowin_rPLL_126mhz
     port map (
+        reset   => reset,
         clkout  => clk_pixel_x10,
         clkoutd => clk_pixel_x5,
         lock    => pll_lock,
@@ -278,9 +279,7 @@ module_inst: entity work.sysctrl
   data_out            => sys_data_out,
   -- values that can be configured by the user
   system_reset        => system_reset,
-  system_wide_screen  => system_wide_screen, 
   system_scanlines    => system_scanlines,
-  system_lores_text   => open,
   -- port io (used to expose rs232)
   port_status         => (others=>'0'),
   port_out_available  => (others=>'0'),
@@ -294,12 +293,10 @@ module_inst: entity work.sysctrl
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => unsigned'(key_user & key_reset), -- S2 and S1 buttons
+  buttons             => unsigned'(user_button & reset),
   leds                => open,
   color               => ws2812_color
 );
-
-videoG  <= "1111" when videoG0 = '1' else "0000";
 
 sdc_iack <= int_ack(3);
 
@@ -357,9 +354,9 @@ port map(
       hs_in_n   => hSync,
       vs_in_n   => vSync,
 
-      r_in      => "0000",
+      r_in      => videoR,
       g_in      => videoG,
-      b_in      => "0010",
+      b_in      => videoB, --"0010",
 
       audio_l => (others=>'0'),
       audio_r => (others=>'0'),
@@ -370,7 +367,7 @@ port map(
       mcu_data  => mcu_data_out,
 
       -- values that can be configure by the user via osd
-      system_wide_screen => system_wide_screen,
+      system_wide_screen => '0',
       system_scanlines => system_scanlines,
       system_volume => "00",
 
@@ -397,14 +394,12 @@ begin
 	end if;
 end process;
 
-por <= '0' when pll_lock = '0' or system_reset(0) = '1' else '1';
-
 -- CPU CHOICE GOES HERE
 cpu1 : entity work.T65
 port map(
     Enable => '1',
     Mode => "00",
-    Res_n => por,
+    Res_n => reset_n_internal, -- '0' when pll_lock = '0' or system_reset(0) = '1' else '1',
     Clk => cpuClock,
     Rdy => '1',
     Abort_n => '1',
@@ -443,49 +438,89 @@ port map
     oce => '1'
 );
 
+--videoR  <= "1111" when videoR0 = '1' else "0000";
+--videoG  <= "1111" when videoG0 = '1' else "0000";
+--videoB  <= "1111" when videoB0 = '1' else "0000";
+
+videoR(1 downto 0)  <= "00";
+videoG(1 downto 0)  <= "00";
+videoB(1 downto 0)  <= "00";
+
 -- ____________________________________________________________________________________
 -- INPUT/OUTPUT DEVICES GO HERE
 
-vt52inst: entity work.vt52
+io1 : entity work.SBCTextDisplayRGB
 port map (
-    clk         => clk_pixel_x2, -- 50.4Mhz
-    clk_pixel   => clk_pixel,    -- 25.2Mhz
-    uart_clk    => serialClock, -- 1.8MHz
-    pll_lock    => por,
-    hsync       => hSync,
-    vsync       => vSync,
-    vblank      => vblank,
-    hblank      => hblank,
-    video       => videoG0,
-    led         => leds(0),
-    usb_kbd     => usb_kbd,
-    kbd_strobe  => kbd_strobe,
-    ps2_clk     => ps2_kbd_clk,
-    ps2_data    => ps2_kbd_data,
-    rxd         => uarttx,
-    txd         => uartrx
+	n_reset => pll_lock,
+	clk => clk_pixel, --_x2, -- 50.4Mhz
+
+	-- RGB video signals
+   hSync   => hSync,
+   vSync   => vSync,
+   videoR0 => videoR(3),
+   videoR1 => videoR(2),
+   videoG0 => videoG(3),
+   videoG1 => videoG(2),
+   videoB0 => videoB(3), 
+   videoB1 => videoB(2),
+	hBlank => hblank,
+	vBlank => vblank,
+	cepix => open,
+
+	-- Monochrome video signals (when using TV timings only)
+	sync => open,
+	video => open,
+
+	n_wr => n_interface1CS or cpuClock or n_WR,
+	n_rd => n_interface1CS or cpuClock or (not n_WR),
+	n_int => n_int1,
+	regSel => cpuAddress(0),
+	dataIn => cpuDataOut,
+	dataOut => interface1DataOut,
+	ps2Clk => ps2_kbd_clk,
+	ps2Data => ps2_kbd_data
 );
 
-io1 : entity work.bufferedUART
-port map(
-    clk => clk_pixel_x2,
-    n_wr => n_interface1CS or cpuClock or n_WR,
-    n_rd => n_interface1CS or cpuClock or (not n_WR),
-    n_int => n_int1,
-    regSel => cpuAddress(0),
-    dataIn => cpuDataOut,
-    dataOut => interface1DataOut,
-    rxClock => serialClock, -- 16 x baud rate 1.843 MHz, 115200 baud × 16
-    txClock => serialClock,
-    rxd => uartrx,
-    txd => uarttx,
-    n_cts => '0',
-    n_dcd => '0',
-    n_rts => rts1
-);
+--vt52inst: entity work.vt52
+--port map (
+--    clk         => clk_pixel_x2, -- 50.4Mhz
+--    clk_pixel   => clk_pixel,    -- 25.2Mhz
+--    uart_clk    => serialClock, -- 1.8MHz
+--    pll_lock    => pll_lock,
+--    hsync       => hSync,
+--    vsync       => vSync,
+--    vblank      => vblank,
+--    hblank      => hblank,
+--    video       => videoG0,
+--    led         => open,
+--    usb_kbd     => usb_kbd,
+--    kbd_strobe  => kbd_strobe,
+--    ps2_clk     => ps2_kbd_clk,
+--    ps2_data    => ps2_kbd_data,
+--    rxd         => uarttx,
+--    txd         => uartrx
+--);
 
-leds_n <= not leds;
-leds(5 downto 1) <= "00000";
+--io1 : entity work.bufferedUART
+--port map(
+--    clk => clk_pixel_x2,
+--    n_wr => n_interface1CS or cpuClock or n_WR,
+--    n_rd => n_interface1CS or cpuClock or (not n_WR),
+--    n_int => n_int1,
+--    regSel => cpuAddress(0),
+--    dataIn => cpuDataOut,
+--    dataOut => interface1DataOut,
+--    rxClock => serialClock, -- 16 x baud rate 1.843 MHz, 115200 baud × 16
+--    txClock => serialClock,
+--    rxd => uartrx,
+--    txd => uarttx,
+--    n_cts => '0',
+--    n_dcd => '0',
+--    n_rts => rts1
+--);
+
+-- Tang nano 9k LED
+LED(5 downto 0) <= "111111";
 
 sd1 : entity work.sd_controller
 port map(

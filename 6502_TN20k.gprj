@@ -21,6 +21,7 @@
         <File path="src/hdmi/serializer.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
+        <File path="src/keyboard.v" type="file.verilog" enable="1"/>
         <File path="src/keymap_rom.v" type="file.verilog" enable="1"/>
         <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
@@ -33,8 +34,6 @@
         <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
         <File path="src/misc/ws2812.v" type="file.verilog" enable="1"/>
         <File path="src/simple_register.v" type="file.verilog" enable="1"/>
-        <File path="src/tang/keyboard.v" type="file.verilog" enable="1"/>
-        <File path="src/tang/keymap.v" type="file.verilog" enable="1"/>
         <File path="src/tang/video_generator.v" type="file.verilog" enable="1"/>
         <File path="src/tang/vt52.v" type="file.verilog" enable="1"/>
         <File path="src/uart.v" type="file.verilog" enable="1"/>
@@ -48,8 +47,10 @@
         <File path="src/gowin_prom/basicRom.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll_126mhz.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sd_controller.vhd" type="file.vhdl" enable="1"/>
         <File path="src/tang/Microcomputer.vhd" type="file.vhdl" enable="1"/>
         <File path="src/tang/6502_TN20k.cst" type="file.cst" enable="1"/>
+        <File path="src/6502.sdc" type="file.sdc" enable="1"/>
         <File path="src/misc/terminal_xml.hex" type="file.other" enable="1"/>
     </FileList>
 </Project>

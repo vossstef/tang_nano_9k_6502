@@ -6,8 +6,8 @@
 */
 
 module keymap (
-  input [6:0]  code,
-  output [15:0] ps2
+  input wire [6:0]  code,
+  output wire [15:0] ps2
 );
 
 assign ps2 = 

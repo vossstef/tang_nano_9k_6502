@@ -1,13 +1,3 @@
---Copyright (C)2014-2025 Gowin Semiconductor Corporation.
---All rights reserved.
---File Title: IP file
---Tool Version: V1.9.12.01
---IP Version: 1.0
---Part Number: GW2AR-LV18QN88C8/I7
---Device: GW2AR-18
---Device Version: C
---Created Time: Sun Mar 29 22:09:30 2026
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 
@@ -16,7 +6,6 @@ entity Gowin_rPLL_126mhz is
         clkout: out std_logic;
         lock: out std_logic;
         clkoutd: out std_logic;
-        reset: in std_logic;
         clkin: in std_logic
     );
 end Gowin_rPLL_126mhz;
@@ -119,7 +108,7 @@ begin
             CLKOUTP => clkoutp_o,
             CLKOUTD => clkoutd,
             CLKOUTD3 => clkoutd3_o,
-            RESET => reset,
+            RESET => gw_gnd,
             RESET_P => gw_gnd,
             CLKIN => clkin,
             CLKFB => gw_gnd,

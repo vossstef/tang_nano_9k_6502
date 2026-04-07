@@ -61,7 +61,9 @@ module command_handler
 
    // if we are erasing part of the screen or moving the cursor
    // we can't receive new commands
-   assign ready = (state & (state_erase | state_cursor | state_addr)) == 0;
+   assign ready = !(state == state_erase ||
+                 state == state_cursor ||
+                 state == state_addr);
    assign new_char = new_char_q;
    assign new_char_address = new_char_address_q;
    assign new_char_wen = new_char_wen_q;
@@ -110,8 +112,8 @@ module command_handler
                     new_char_wen_q <= 1;
                     // no auto linefeed
                     if (new_cursor_x_q != (COLS-1)) begin
-                       new_cursor_x_q <= new_cursor_x_q + 1;
-                       current_char_addr <= current_char_addr + 1;
+                       new_cursor_x_q <= new_cursor_x_q + 1'b1;
+                       current_char_addr <= current_char_addr + 1'b1;
                        new_cursor_wen_q <= 1;
                     end
                  end
@@ -120,8 +122,8 @@ module command_handler
                       // backspace
                       8'h08: begin
                          if (new_cursor_x_q != 0) begin
-                            new_cursor_x_q <= new_cursor_x_q - 1;
-                            current_char_addr <= current_char_addr - 1;
+                            new_cursor_x_q <= new_cursor_x_q - 1'b1;
+                            current_char_addr <= current_char_addr - 1'b1;
                             new_cursor_wen_q <= 1;
                          end
                       end
@@ -129,13 +131,13 @@ module command_handler
                       8'h09: begin
                          // go until the last tab stop by 8 spaces, then 1 by 1
                          if (new_cursor_x_q < (COLS-9)) begin
-                            new_cursor_x_q <= {(new_cursor_x_q[COL_BITS-1:3]+1), 3'b000};
-                            current_char_addr <= {(current_char_addr[ADDR_BITS-1:3]+1), 3'b000};
-                            new_cursor_wen_q <= 1;
+                            new_cursor_x_q <= {(new_cursor_x_q[COL_BITS-1:3]+1'b1), 3'b000};
+                            current_char_addr <= {(current_char_addr[ADDR_BITS-1:3]+1'b1), 3'b000};
+                            new_cursor_wen_q <= 1'b1;
                          end
                          else if (new_cursor_x_q != (COLS-1)) begin
-                            new_cursor_x_q <= new_cursor_x_q + 1;
-                            current_char_addr <= current_char_addr + 1;
+                            new_cursor_x_q <= new_cursor_x_q + 1'b1;
+                            current_char_addr <= current_char_addr + 1'b1;
                             new_cursor_wen_q <= 1;
                          end
                       end // case: 8'h09
@@ -158,11 +160,11 @@ module command_handler
                             new_char_q <= " ";
                             new_char_address_q <= new_first_char_q;
                             new_char_wen_q <= 1;
-                            last_char_to_erase <= new_first_char_q + (COLS-1);
+                            last_char_to_erase <= new_first_char_q + (COLS-1'b1);
                             state <= state_erase;
                          end
                          else begin
-                            new_cursor_y_q <= new_cursor_y_q + 1;
+                            new_cursor_y_q <= new_cursor_y_q + 1'b1;
                             new_cursor_wen_q <= 1;
                             if (current_row_addr == LAST_ROW) begin
                                current_row_addr <= 0;
@@ -176,7 +178,7 @@ module command_handler
                       end
                       // carriage return
                       8'h0d: begin
-                         if (new_cursor_x != 0) begin
+                         if (new_cursor_x_q != 0) begin
                             new_cursor_x_q <= 0;
                             new_cursor_wen_q <= 1;
                             current_char_addr <= current_row_addr;
@@ -195,7 +197,7 @@ module command_handler
                    // Esc-only, so no BS, LF & SPACE (covered before)
                    "B": begin
                       if (new_cursor_y_q != (ROWS-1)) begin
-                         new_cursor_y_q <= new_cursor_y_q + 1;
+                         new_cursor_y_q <= new_cursor_y_q + 1'b1;
                          new_cursor_wen_q <= 1;
                          if (current_row_addr == LAST_ROW) begin
                             current_row_addr <= 0;
@@ -224,7 +226,7 @@ module command_handler
                             current_char_addr <= current_char_addr - COLS;
                             // characters to erase (whole line)
                             new_char_address_q <= new_first_char_q - COLS;
-                            last_char_to_erase <= new_first_char_q - 1;
+                            last_char_to_erase <= new_first_char_q - 1'b1;
                          end
                          new_first_char_wen_q <= 1;
                          // character to erase last line
@@ -233,7 +235,7 @@ module command_handler
                          state <= state_erase;
                       end
                       else begin
-                         new_cursor_y_q <= new_cursor_y_q - 1;
+                         new_cursor_y_q <= new_cursor_y_q - 1'b1;
                          new_cursor_wen_q <= 1;
                          if (current_row_addr == 0) begin
                             current_row_addr <= LAST_ROW;
@@ -248,7 +250,7 @@ module command_handler
                    end
                    "A": begin
                       if (new_cursor_y_q != 0) begin
-                         new_cursor_y_q <= new_cursor_y_q - 1;
+                         new_cursor_y_q <= new_cursor_y_q - 1'b1;
                          new_cursor_wen_q <= 1;
                          if (current_row_addr == 0) begin
                             current_row_addr <= LAST_ROW;
@@ -263,17 +265,17 @@ module command_handler
                    end
                    "C": begin
                       if (new_cursor_x_q != (COLS-1)) begin
-                         new_cursor_x_q <= new_cursor_x_q + 1;
+                         new_cursor_x_q <= new_cursor_x_q + 1'b1;
                          new_cursor_wen_q <= 1;
-                         current_char_addr <= current_char_addr+1;
+                         current_char_addr <= current_char_addr+1'b1;
                       end
                       state <= state_char;
                    end
                    "D": begin
                       if (new_cursor_x_q != 0) begin
-                         new_cursor_x_q <= new_cursor_x_q - 1;
+                         new_cursor_x_q <= new_cursor_x_q - 1'b1;
                          new_cursor_wen_q <= 1;
-                         current_char_addr <= current_char_addr-1;
+                         current_char_addr <= current_char_addr-1'b1;
                       end
                       state <= state_char;
                    end
@@ -297,7 +299,7 @@ module command_handler
                       new_char_q <= " ";
                       new_char_address_q <= current_char_addr;
                       new_char_wen_q <= 1;
-                      last_char_to_erase <= current_row_addr + (COLS-1);
+                      last_char_to_erase <= current_row_addr + (COLS-1'b1);
                       state <= state_erase;
                    end
                    "J": begin
@@ -306,7 +308,7 @@ module command_handler
                       new_char_address_q <= current_char_addr;
                       new_char_wen_q <= 1;
                       last_char_to_erase <= new_first_char_q == 0?
-                                            LAST_ROW+(COLS-1): new_first_char_q-1;
+                                            LAST_ROW+(COLS-1'b1): new_first_char_q-1'b1;
                       state <= state_erase;
                    end
                    // escape
@@ -330,7 +332,7 @@ module command_handler
                  // row & col received, now we need to calculate the new row address
                  // XXX I'm not sure what happens if data < 8'h20, this is a guess
                  new_col <= (data >= 8'h20 && data < (8'h20 + COLS))?
-                            data - 8'h20 : (COLS-1);
+                            data - 8'h20 : (COLS-1'b1);
                  // this may need substracting if it's more than LAST_ROW
                  // but we'll do it in the next state
                  // new_addr has an extra bit to avoid overflows
@@ -350,8 +352,8 @@ module command_handler
                  end
                  else begin
                     // keep erasing, but be careful if reaching the end of the buffer
-                    new_char_address_q = new_char_address_q == LAST_ROW + (COLS+1)?
-                                         0 : new_char_address_q + 1;
+                    new_char_address_q <= new_char_address_q == LAST_ROW + COLS?
+                                         0 : new_char_address_q + 1'b1;
                     new_char_wen_q <= 1;
                  end
               end

@@ -1,18 +1,20 @@
 module vt52 (
-            input clk,
-            input clk_pixel,
-            input uart_clk,
-            input pll_lock,
-            output hsync,
-            output vsync,
-            output vblank,
-            output hblank,
-            output video,
-            output led,
-            input [7:0] usb_kbd,
-            input kbd_strobe,
-            input  rxd,
-            output txd
+            input wire clk,
+            input wire clk_pixel,
+            input wire uart_clk,
+            input wire pll_lock,
+            output wire hsync,
+            output wire vsync,
+            output wire vblank,
+            output wire hblank,
+            output wire video,
+            output wire led,
+            input wire [7:0] usb_kbd,
+            input wire kbd_strobe,
+            input wire ps2_clk,
+            input wire ps2_data,
+            input wire rxd,
+            output wire txd
             );
    localparam ROWS = 25;
    localparam COLS = 80;
@@ -56,8 +58,10 @@ module vt52 (
 
    keyboard keyboard(.clk(clk),
                      .reset(~pll_lock),
-                     .usb_kbd(usb_kbd),
-                     .kbd_strobe(kbd_strobe),
+//                     .usb_kbd(usb_kbd),
+//                     .kbd_strobe(kbd_strobe),
+                     .ps2_data(ps2_data),
+                     .ps2_clk(ps2_clk),
                      .data(uart_in_data),
                      .valid(uart_in_valid),
                      .ready(uart_in_ready)
@@ -114,11 +118,13 @@ module vt52 (
                       .char_rom_data(char_rom_data)
                       );
 
+wire txd_i;
+
    uart uart(
       .clk(clk),
       .rst(~pll_lock),
       .rxd(rxd),
-      .txd(txd),
+      .txd(txd_i),
        // uart pipeline in 
       .s_axis_tdata(uart_in_data),
       .s_axis_tvalid(uart_in_valid),
@@ -133,8 +139,10 @@ module vt52 (
       .rx_overrun_error(),
       .rx_frame_error(),
                 //config
-      .prescale(50400000/(115200*8))
+      .prescale(16'(50400000/(115200*8)))
       );
+
+assign txd = txd_i;
 
    command_handler #(.ROWS(ROWS),
                      .COLS(COLS),

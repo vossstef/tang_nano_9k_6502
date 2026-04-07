@@ -11,25 +11,17 @@
 module keymap_rom
   (input wire clk,
    input wire [10:0] addr,
-   output wire [7:0] dout
+   output reg [7:0] dout
    );
 
-   reg [7:0]    doutreg;
-   reg [7:0]    mem [2047:0];
-
-   integer i;
+   reg [7:0] mem [2047:0];
 
    initial begin
-      // the hex file is sparse, prefill with zeros
-      // XXX yosys doesn't like this, it overrides the readmemh
-      // so for now just assume that all other positions have zeros...
-      // for (i = 0; i < 2047; i = i + 1) mem[i] = "b";
-      $readmemh("mem/keymap2.hex", mem) ;
+      $readmemh("mem/keymap2.hex", mem);
    end
 
    always @(posedge clk) begin
-      doutreg = mem[addr];
+      dout = mem[addr];
    end
 
-   assign dout = doutreg;
 endmodule

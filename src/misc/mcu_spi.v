@@ -5,13 +5,13 @@
 */
 
 module mcu_spi (
-  input        clk,
-  input        reset,
+  input wire   clk,
+  input wire   reset,
 
   // SPI interface to MCU
-  input        spi_io_ss,
-  input        spi_io_clk,
-  input        spi_io_din,
+  input wire   spi_io_ss,
+  input wire   spi_io_clk,
+  input wire   spi_io_din,
   output reg   spi_io_dout,
 
   // byte interface to the various core components
@@ -19,12 +19,12 @@ module mcu_spi (
   output reg      mcu_hid_strobe, // byte strobe for HID target  
   output reg      mcu_osd_strobe, // byte strobe for OSD target
   output reg      mcu_sdc_strobe, // byte strobe for SD card target
-  output       mcu_start,
-  input  [7:0] mcu_sys_din,
-  input  [7:0] mcu_hid_din,
-  input  [7:0] mcu_osd_din,
-  input  [7:0] mcu_sdc_din,
-  output [7:0] mcu_dout
+  output wire     mcu_start,
+  input wire [7:0] mcu_sys_din,
+  input wire [7:0] mcu_hid_din,
+  input wire [7:0] mcu_osd_din,
+  input wire [7:0] mcu_sdc_din,
+  output wire [7:0] mcu_dout
 );
    
 // SPI runs in MODE1 

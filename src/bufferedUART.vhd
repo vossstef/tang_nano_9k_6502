@@ -88,6 +88,7 @@ begin
 	statusReg(1) <= '1' when txByteWritten=txByteSent else '0';
     statusReg(2) <= n_dcd;
     statusReg(3) <= n_cts;
+    statusReg(6 downto 4) <= "000";
     statusReg(7) <= not(n_int_internal);
 
 	-- interrupt mask

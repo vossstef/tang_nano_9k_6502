@@ -127,11 +127,14 @@ module vt52 (input  wire     clk,
                       .char_rom_data(char_rom_data)
                       );
 
-   uart uart(.clk(clk),
+wire txd_i;
+
+   uart uart(
+                 .clk(clk),
                  .rst(~pll_lock),
                  // usb pins
                  .rxd(rxd),
-                 .txd(txd),
+                 .txd(txd_i),
                  // uart pipeline in (keyboard->usb)
                  .s_axis_tdata(uart_in_data),
                  .s_axis_tvalid(uart_in_valid),
@@ -146,8 +149,10 @@ module vt52 (input  wire     clk,
                 .rx_overrun_error(),
                 .rx_frame_error(),
                 //config
-                 .prescale(50400000/(115200*8))
+                 .prescale(16'(50400000/(115200*8)))
                  );
+
+assign txd = txd_i;
 
    command_handler #(.ROWS(ROWS),
                      .COLS(COLS),
