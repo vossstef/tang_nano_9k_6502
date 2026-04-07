@@ -171,7 +171,7 @@ module video_generator
             else begin
                // we are still on the same row, so
                // go back to the first char in this line
-               next_char = char - 80;
+               next_char = char - 11'd80;
                next_rowc = rowc + 1;
             end
          end

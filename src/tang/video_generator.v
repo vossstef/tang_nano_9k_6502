@@ -99,10 +99,10 @@ module video_generator
    always @(*) begin
       if (hc == hpixels) begin
          next_hc = 0;
-         next_vc = (vc == vlines)? 0 : vc + 1;
+         next_vc = (vc == vlines)? 0 : vc + 1'b1;
       end
       else begin
-         next_hc = hc + 1;
+         next_hc = hc + 1'b1;
          next_vc = vc;
       end
       next_hsync = (next_hc >= hbp + hvisible + hfp)? hsync_on : hsync_off;
@@ -155,7 +155,7 @@ module video_generator
                // we are moving to the next row, so char
                // is already set at the correct value, unless
                // we reached the end of the buffer
-               next_row = row + 1;
+               next_row = row + 1'b1;
                next_rowc = 0;
                if (char == PAST_LAST_ROW) begin
                   next_char = 0;
@@ -165,7 +165,7 @@ module video_generator
                // we are still on the same row, so
                // go back to the first char in this line
                next_char = char - 80;
-               next_rowc = rowc + 1;
+               next_rowc = rowc + 1'b1;
             end
          end
       end
@@ -174,7 +174,7 @@ module video_generator
          next_row = row;
          next_rowc = rowc;
          next_col = col;
-         next_colc = colc+1;
+         next_colc = colc + 1'b1;
          next_char = char;
 
          if (colc == 7) begin
@@ -182,9 +182,9 @@ module video_generator
             // one to read from ram & one to read from rom)
             // Since the memory bus runs at twice the pixel clock rate
             // we can do it just at the last pixel
-            next_char = char+1;
+            next_char = char + 1'b1;
             // move to the next char
-            next_col = col+1;
+            next_col = col+1'b1;
             next_colc = 0;
          end
       end // else: !if(next_hblank)

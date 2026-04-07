@@ -118,11 +118,13 @@ module vt52 (
                       .char_rom_data(char_rom_data)
                       );
 
+wire txd_i;
+
    uart uart(
       .clk(clk),
       .rst(~pll_lock),
       .rxd(rxd),
-      .txd(txd),
+      .txd(txd_i),
        // uart pipeline in 
       .s_axis_tdata(uart_in_data),
       .s_axis_tvalid(uart_in_valid),
@@ -137,8 +139,10 @@ module vt52 (
       .rx_overrun_error(),
       .rx_frame_error(),
                 //config
-      .prescale(50400000/(115200*8))
+      .prescale(16'(50400000/(115200*8)))
       );
+
+assign txd = txd_i;
 
    command_handler #(.ROWS(ROWS),
                      .COLS(COLS),

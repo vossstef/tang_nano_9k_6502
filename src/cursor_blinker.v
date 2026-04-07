@@ -14,18 +14,18 @@ module cursor_blinker
    always @(posedge clk) begin
       if (reset) begin
          counter <= 0;
-         has_incremented <= 0;
+         has_incremented <= 1'b0;
       end
       else if (reset_count) begin
          counter <= 0;
          has_incremented <= tick;
       end
       else if (tick && !has_incremented) begin
-         counter <= counter + 1;
-         has_incremented <= 1;
+         counter <= counter + 1'b1;
+         has_incremented <= 1'b1;
       end
       else if (!tick && has_incremented) begin
-         has_incremented <= 0;
+         has_incremented <= 1'b0;
       end
    end
    assign blink_on = ~counter[BITS-1];
