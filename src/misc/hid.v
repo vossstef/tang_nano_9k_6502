@@ -55,7 +55,7 @@ reg [5:0] db9_portD2;
 reg  [7:0] kbd_data;
 reg        kbd_we;
 reg [31:0] ps2_key_raw = 0;
-reg ps2skip = 1'b0;
+reg psvalid = 1'b0;
 wire pressed  = (ps2_key_raw[15:8] != 8'hf0);
 wire extended = (~pressed ? (ps2_key_raw[23:16] == 8'he0) : (ps2_key_raw[15:8] == 8'he0));
 reg clk_ps2;
@@ -116,11 +116,11 @@ always @(posedge clk) begin
       usb_kbd <= 8'h00;
       kbd_strobe <= 1'b0;
       ps2_key_raw <= 0;
-      ps2skip <= 1'b0;
+      psvalid <= 1'b0;
       kbd_we <= 1'b0;
    end else begin
-      if (data_in_start == 1'b0 && ps2skip == 1'b1) begin
-            ps2skip <= 1'b0;
+      if (data_in_start == 1'b0 && psvalid == 1'b1) begin
+            psvalid <= 1'b0;
             ps2_key <= {~ps2_key[10], pressed, extended, ps2_key_raw[7:0]};
             if(ps2_key_raw == 'hE012E07C) ps2_key[9:0] <= 'h37C; // prnscr pressed
             if(ps2_key_raw == 'h7CE0F012) ps2_key[9:0] <= 'h17C; // prnscr released
@@ -150,7 +150,7 @@ always @(posedge clk) begin
             state <= 4'd0;
             command <= data_in;
             ps2_key_raw <= 0;
-            ps2skip <= 1'b0;
+            psvalid <= 1'b0;
         end else begin
             if(state != 4'd15) state <= state + 4'd1;
 
@@ -178,7 +178,7 @@ always @(posedge clk) begin
                         kbd_data <= data_in;
                         kbd_we <= 1'b1;
                         if (state == 4'd2)
-                            ps2skip <= 1'b1;
+                            psvalid <= 1'b1;
                     end
                 endcase
             end
