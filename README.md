@@ -1,16 +1,18 @@
 # tang_nano_9k_6502
 A [6502](https://en.wikipedia.org/wiki/MOS_Technology_6502) SBC in a [Gowin](https://www.gowinsemi.com/en/product/detail/49/) FPGA on a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html) and [Sipeed Tang Nano 20k](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html).  
 
-Ported [ricktw](https://github.com/riktw) project [6502_HDMI](https://github.com/riktw/tang4Kramblings) to a Tang Nano 9k/20k  
+Ported [ricktw](https://github.com/riktw) project [6502_HDMI](https://github.com/riktw/tang4Kramblings) to a Tang Nano 9k and 20k.  
+
+Assume he took the sources from [MiSTer MultiComp](https://github.com/MiSTer-devel/MultiComp_MiSTer)  
 Further description of the original project over [here](https://justanotherelectronicsblog.com/?p=986) using sources from [display_controller](https://github.com/projf/display_controller) and [vt52](https://github.com/AndresNavarro82/vt52-fpga)  
 
 Features
 * HDMI Video Output 640x480
 * VT52 Terminal 80x25
 * [MS BASIC](https://github.com/mist64/msbasic)
-* PS/2 Keyboard
+* PS/2 Keyboard (TN20k USB)
 * RAM 4K
-* **TN20k** uses [FPGA-Companion](https://github.com/MiSTle-Dev/FPGA-Companion) for USB Keyboard Input.  The Companion convert USB HID into PS2 scancodes that are converted (hid.v) into PS/2 serial data (demonstartion of PS/2 capability for legacy projects).  
+* **TN20k** uses [FPGA-Companion](https://github.com/MiSTle-Dev/FPGA-Companion) for USB Keyboard Input.  The Companion convert USB HID into PS2 scancodes that are converted (hid.v) into PS/2 serial data (demonstrtion of PS/2 capability for legacy projects).  
 
 ## ToDo at Startup
 A green blinking cursor will apear.  
